@@ -1,6 +1,7 @@
 package fr.redsavant.bdapi.builder;
 
 import fr.redsavant.bdapi.DisplayCrate;
+import fr.redsavant.bdapi.internal.DisplayRegistry;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.BlockDisplay;
@@ -13,6 +14,7 @@ import org.joml.Vector3f;
 public final class BlockDisplayBuilder {
 
     private Plugin plugin;
+    private final DisplayRegistry registry;
 
     private Location location;
     private Material material = Material.STONE; // Default material if not defined in the builder
@@ -26,8 +28,9 @@ public final class BlockDisplayBuilder {
     private float shadowRadius = -1f; // Default
     private float shadowStrength = -1f; // Default
 
-    public BlockDisplayBuilder(Plugin plugin) {
+    public BlockDisplayBuilder(Plugin plugin, DisplayRegistry registry) {
         this.plugin = plugin;
+        this.registry = registry;
     }
 
     /**
@@ -152,7 +155,8 @@ public final class BlockDisplayBuilder {
             throw new IllegalStateException("You need to call .at(location) before .spawn().");
         }
         BlockDisplay entity = location.getWorld().spawn(location, BlockDisplay.class, this::configure);
-        DisplayCrate crate = new DisplayCrate(entity, plugin);
+        DisplayCrate crate = new DisplayCrate(entity, plugin, registry);
+        registry.register(crate);
         return crate;
     }
 
