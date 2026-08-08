@@ -1,9 +1,13 @@
 package fr.redsavant.bdapi.builder;
 
+import fr.redsavant.bdapi.DisplayCrate;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Display;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.util.Transformation;
+import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 public final class BlockDisplayBuilder {
@@ -137,5 +141,77 @@ public final class BlockDisplayBuilder {
         this.shadowRadius = radius;
         this.shadowStrength = strength;
         return this;
+    }
+
+    /**
+     * Build and spawn the block display
+     * @return crate
+     */
+    public DisplayCrate spawn() {
+        if (location == null) {
+            throw new IllegalStateException("You need to call .at(location) before .spawn().");
+        }
+        BlockDisplay entity = location.getWorld().spawn(location, BlockDisplay.class, this::configure);
+        DisplayCrate crate = new DisplayCrate(entity, plugin);
+        return crate;
+    }
+
+    /**
+     * Alias of spawn
+     * @return spawn
+     */
+    public DisplayCrate build() {
+        return spawn();
+    }
+
+    /**
+     * Set parameters of block display
+     * @param entity
+     */
+    private void configure(BlockDisplay entity) {
+        entity.setBlock(material.createBlockData());
+        entity.setBillboard(billboard);
+        if (brightnessBlock >= 0 && brightnessSky >= 0) {
+            entity.setBrightness(new Display.Brightness(brightnessBlock, brightnessSky));
+        }
+        if (viewRange >= 0) {
+            entity.setViewRange(viewRange);
+        }
+        if (shadowRadius >= 0) {
+            entity.setShadowRadius(shadowRadius);
+        }
+        if (shadowStrength >= 0) {
+            entity.setShadowStrength(shadowStrength);
+        }
+        entity.setTransformation(buildTransformation());
+    }
+
+    /**
+     * Utility methode to build the transformation of a block display
+     * @return Transformation
+     */
+    private Transformation buildTransformation() {
+        Quaternionf rotation = euleurToQuaternion(eulerRotation);
+        return new Transformation(
+                new Vector3f(translation),
+                rotation,
+                new Vector3f(scale),
+                new Quaternionf()
+        );
+    }
+
+    /**
+     * Utility method to use the Euler convertion
+     * @param eulerDegrees
+     * @return Quaternionf
+     */
+    public static Quaternionf euleurToQuaternion(Vector3f eulerDegrees) {
+        Quaternionf q = new Quaternionf();
+
+        q.rotateY((float) Math.toRadians(eulerDegrees.y));
+        q.rotateX((float) Math.toRadians(eulerDegrees.x));
+        q.rotateZ((float) Math.toRadians(eulerDegrees.z));
+
+        return q;
     }
 }
