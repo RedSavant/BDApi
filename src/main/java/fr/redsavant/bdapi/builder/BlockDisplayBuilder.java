@@ -1,6 +1,7 @@
 package fr.redsavant.bdapi.builder;
 
 import fr.redsavant.bdapi.DisplayCrate;
+import fr.redsavant.bdapi.Displays;
 import fr.redsavant.bdapi.internal.DisplayRegistry;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -13,6 +14,7 @@ import org.joml.Vector3f;
 
 public final class BlockDisplayBuilder {
 
+    private final Displays displays;
     private Plugin plugin;
     private final DisplayRegistry registry;
 
@@ -28,7 +30,9 @@ public final class BlockDisplayBuilder {
     private float shadowRadius = -1f; // Default
     private float shadowStrength = -1f; // Default
 
-    public BlockDisplayBuilder(Plugin plugin, DisplayRegistry registry) {
+    public BlockDisplayBuilder(Displays displays, Plugin plugin, DisplayRegistry registry) {
+
+        this.displays = displays;
         this.plugin = plugin;
         this.registry = registry;
     }
