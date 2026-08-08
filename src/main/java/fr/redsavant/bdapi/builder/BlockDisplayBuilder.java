@@ -70,4 +70,72 @@ public final class BlockDisplayBuilder {
         this.scale.set(x, y, z);
         return this;
     }
+
+    /**
+     * Translation of the block display
+     * @param x
+     * @param y
+     * @param z
+     * @return this
+     */
+    public BlockDisplayBuilder translate(float x, float y, float z) {
+        this.translation.set(x, y, z);
+        return this;
+    }
+
+    /**
+     * Rotation in degrees of the block display (pitch=x, yaw=y, roll=z), applied as an Euler rotation ZYX.
+     * @param x
+     * @param y
+     * @param z
+     * @return this
+     */
+    public BlockDisplayBuilder rotate(float x, float y, float z) {
+        this.eulerRotation.set(x, y, z);
+        return this;
+    }
+
+    /**
+     * Brightness of the block display
+     * @param blockLight
+     * @param skyLight
+     * @return this
+     */
+    public BlockDisplayBuilder brightness(int blockLight, int skyLight) {
+        this.brightnessBlock = blockLight;
+        this.brightnessSky = skyLight;
+        return this;
+    }
+
+    /**
+     * Controls the orientation of the display relative to the player.
+     * @param billboard
+     * @return this
+     */
+    public BlockDisplayBuilder billboard(Display.Billboard billboard) {
+        this.billboard = billboard;
+        return this;
+    }
+
+    /**
+     * View range of the block display
+     * @param viewRange
+     * @return this
+     */
+    public BlockDisplayBuilder viewRange(float viewRange) {
+        this.viewRange = viewRange;
+        return this;
+    }
+
+    /**
+     * Manage the shadow of the block display
+     * @param radius of the shadow
+     * @param strength of the shadow
+     * @return
+     */
+    public BlockDisplayBuilder shadow(float radius, float strength) {
+        this.shadowRadius = radius;
+        this.shadowStrength = strength;
+        return this;
+    }
 }
