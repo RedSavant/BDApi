@@ -1,5 +1,7 @@
 package fr.redsavant.bdapi;
 
+import fr.redsavant.bdapi.animation.AnimationBuilder;
+import fr.redsavant.bdapi.internal.Animator;
 import fr.redsavant.bdapi.internal.DisplayRegistry;
 import fr.redsavant.bdapi.transform.TransformHandle;
 import org.bukkit.Location;
@@ -14,11 +16,13 @@ public final class DisplayCrate {
     private final BlockDisplay entity;
     private final Plugin plugin;
     private final DisplayRegistry registry;
+    private final Animator animator;
 
-    public DisplayCrate(BlockDisplay entity, Plugin plugin, DisplayRegistry registry) {
+    public DisplayCrate(BlockDisplay entity, Plugin plugin, DisplayRegistry registry, Animator animator) {
         this.entity = entity;
         this.plugin = plugin;
         this.registry = registry;
+        this.animator = animator;
     }
 
     public BlockDisplay entity() {
@@ -31,6 +35,10 @@ public final class DisplayCrate {
 
     public TransformHandle transform() {
         return new TransformHandle(this);
+    }
+
+    public AnimationBuilder animate() {
+        return new AnimationBuilder(this, animator);
     }
 
     public void remove() {

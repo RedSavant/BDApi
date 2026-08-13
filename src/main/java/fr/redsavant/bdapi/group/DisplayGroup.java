@@ -2,6 +2,7 @@ package fr.redsavant.bdapi.group;
 
 import fr.redsavant.bdapi.DisplayCrate;
 import fr.redsavant.bdapi.builder.BlockDisplayBuilder;
+import fr.redsavant.bdapi.internal.Animator;
 import fr.redsavant.bdapi.internal.DisplayRegistry;
 import fr.redsavant.bdapi.internal.GroupMember;
 import fr.redsavant.bdapi.transform.TransformHandle;
@@ -17,14 +18,16 @@ public final class DisplayGroup {
 
     private final Plugin plugin;
     private final DisplayRegistry registry;
+    private final Animator animator;
 
     private final List<GroupMember> members = new ArrayList<>();
     private Location origin;
     private boolean spawned = false;
 
-    public DisplayGroup(Plugin plugin, DisplayRegistry registry) {
+    public DisplayGroup(Plugin plugin, DisplayRegistry registry, Animator animator) {
         this.plugin = plugin;
         this.registry = registry;
+        this.animator = animator;
     }
 
     public DisplayGroup at(Location origin) {

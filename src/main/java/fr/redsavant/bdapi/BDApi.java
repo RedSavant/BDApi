@@ -1,5 +1,6 @@
 package fr.redsavant.bdapi;
 
+import fr.redsavant.bdapi.internal.Animator;
 import fr.redsavant.bdapi.internal.DisplayRegistry;
 import org.bukkit.plugin.Plugin;
 
@@ -9,10 +10,15 @@ public final class BDApi {
 
     private final Plugin plugin;
     private final DisplayRegistry registry;
+    private final Animator animator;
+    private final Displays displays;
+
 
     private BDApi(Plugin plugin) {
         this.plugin = plugin;
         this.registry = new DisplayRegistry();
+        this.animator = new Animator(plugin);
+        this.displays = new Displays(plugin, registry, animator);
     }
 
     /**
@@ -48,6 +54,10 @@ public final class BDApi {
             throw new IllegalStateException("BDApi is not initalized. Pls init it whit DisplayAPI.init(plugin) at the start of your plugin.");
         }
         return instance;
+    }
+
+    public Displays displays() {
+        return displays;
     }
 
     public Plugin plugin() {
