@@ -4,6 +4,7 @@ import fr.redsavant.bdapi.DisplayCrate;
 import fr.redsavant.bdapi.Displays;
 import fr.redsavant.bdapi.internal.Animator;
 import fr.redsavant.bdapi.internal.DisplayRegistry;
+import fr.redsavant.bdapi.internal.PhysicsEngine;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.BlockDisplay;
@@ -19,6 +20,7 @@ public final class BlockDisplayBuilder {
     private Plugin plugin;
     private final DisplayRegistry registry;
     private final Animator animator;
+    private final PhysicsEngine physicsEngine;
 
     private Location location;
     private Material material = Material.STONE; // Default material if not defined in the builder
@@ -32,12 +34,14 @@ public final class BlockDisplayBuilder {
     private float shadowRadius = -1f; // Default
     private float shadowStrength = -1f; // Default
 
-    public BlockDisplayBuilder(Displays displays, Plugin plugin, DisplayRegistry registry, Animator animator) {
+    public BlockDisplayBuilder(Displays displays, Plugin plugin, DisplayRegistry registry, Animator animator,
+                               PhysicsEngine physicsEngine) {
 
         this.displays = displays;
         this.plugin = plugin;
         this.registry = registry;
         this.animator = animator;
+        this.physicsEngine = physicsEngine;
     }
 
     /**
@@ -162,7 +166,7 @@ public final class BlockDisplayBuilder {
             throw new IllegalStateException("You need to call .at(location) before .spawn().");
         }
         BlockDisplay entity = location.getWorld().spawn(location, BlockDisplay.class, this::configure);
-        DisplayCrate crate = new DisplayCrate(entity, plugin, registry, animator);
+        DisplayCrate crate = new DisplayCrate(entity, plugin, registry, animator, physicsEngine);
         registry.register(crate);
         return crate;
     }

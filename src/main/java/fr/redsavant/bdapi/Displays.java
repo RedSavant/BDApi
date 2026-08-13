@@ -26,7 +26,7 @@ public final class Displays {
     }
 
     public BlockDisplayBuilder create() {
-        return new BlockDisplayBuilder(this, plugin, registry, animator);
+        return new BlockDisplayBuilder(this, plugin, registry, animator, physicsEngine);
     }
 
     public DisplayGroup group() {
