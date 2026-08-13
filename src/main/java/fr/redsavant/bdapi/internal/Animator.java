@@ -28,9 +28,17 @@ public final class Animator {
         task = new BukkitRunnable() {
             @Override
             public void run() {
-
+                tick();
             }
         }.runTaskTimer(plugin, 1L, 1L);
+    }
+
+    public void stop() {
+        if (task != null) {
+            task.cancel();
+            task = null;
+        }
+        active.clear();
     }
 
     public void submit(ActiveAnimation animation) {
