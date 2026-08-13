@@ -4,6 +4,7 @@ import fr.redsavant.bdapi.builder.BlockDisplayBuilder;
 import fr.redsavant.bdapi.group.DisplayGroup;
 import fr.redsavant.bdapi.internal.Animator;
 import fr.redsavant.bdapi.internal.DisplayRegistry;
+import fr.redsavant.bdapi.internal.PhysicsEngine;
 import org.bukkit.plugin.Plugin;
 
 /**
@@ -15,11 +16,13 @@ public final class Displays {
     private final Plugin plugin;
     private final DisplayRegistry registry;
     private final Animator animator;
+    private final PhysicsEngine physicsEngine;
 
-    public Displays(Plugin plugin, DisplayRegistry registry, Animator animator) {
+    public Displays(Plugin plugin, DisplayRegistry registry, Animator animator, PhysicsEngine physicsEngine) {
         this.plugin = plugin;
         this.registry = registry;
         this.animator = animator;
+        this.physicsEngine = physicsEngine;
     }
 
     public BlockDisplayBuilder create() {
