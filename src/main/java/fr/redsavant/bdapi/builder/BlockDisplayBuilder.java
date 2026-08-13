@@ -222,4 +222,11 @@ public final class BlockDisplayBuilder {
 
         return q;
     }
+
+    public Location location() {
+        return location;
+    }
+    public Material material() {
+        return material;
+    }
 }

@@ -1,6 +1,7 @@
 package fr.redsavant.bdapi;
 
 import fr.redsavant.bdapi.internal.DisplayRegistry;
+import fr.redsavant.bdapi.transform.TransformHandle;
 import org.bukkit.Location;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.plugin.Plugin;
@@ -26,6 +27,10 @@ public final class DisplayCrate {
 
     public Location location() {
         return entity.getLocation();
+    }
+
+    public TransformHandle transform() {
+        return new TransformHandle(this);
     }
 
     public void remove() {
