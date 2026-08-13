@@ -16,7 +16,6 @@ public final class BDApi {
     private final Displays displays;
 
 
-
     private BDApi(Plugin plugin) {
         this.plugin = plugin;
         this.registry = new DisplayRegistry();
