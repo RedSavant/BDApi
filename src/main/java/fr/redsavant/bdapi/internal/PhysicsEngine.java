@@ -77,16 +77,19 @@ public final class PhysicsEngine {
             Location current = entity.getLocation();
             Location next = current.clone().add(state.velocity);
 
-            if (isGroundBelow(next)) {
+            Block ground = groundBelow(next);
+            if (ground != null) {
                 // Landing
                 Location landed = next.clone();
-                landed.setY(Math.floor(next.getY() + 1.0));
+                landed.setY(ground.getY() + 1.0);
 
-                if (state.bounce > 0 && Math.abs(state.velocity.getY()) > GROUND_EPSILON) {
+                double reboundVelocity = Math.abs(state.velocity.getY()) * state.bounce;
+                if (state.bounce > 0 && reboundVelocity > GROUND_EPSILON) {
                     entity.teleport(landed);
-                    state.velocity.setY(-state.velocity.getY() * state.bounce);
+                    state.velocity.setY(reboundVelocity);
                 } else {
                     entity.teleport(landed);
+                    state.velocity.setY(0);
                     state.grounded = true;
                     active.remove(entity.getUniqueId());
                     if (state.onLand != null) {
@@ -99,8 +102,8 @@ public final class PhysicsEngine {
         }
     }
 
-    private boolean isGroundBelow(Location loc) {
+    private Block groundBelow(Location loc) {
         Block block = loc.clone().subtract(0, 0.1, 0).getBlock();
-        return block.getType().isSolid();
+        return block.getType().isSolid() ? block : null;
     }
 }
