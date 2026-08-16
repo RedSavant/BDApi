@@ -1,0 +1,12 @@
+name: BDApiTest
+version: '${version}'
+main: fr.redsavant.Main
+api-version: '1.21'
+commands:
+  bdtest:
+    description: Runs the BDApi feature tests
+    usage: /bdtest <all|display|animation|timeline|group|physics|effects|clear>
+    permission: bdapi.test
+permissions:
+  bdapi.test:
+    default: op
