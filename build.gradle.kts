@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "fr.redsavant"
-version = "1.0.0"
+version = "1.0.0-beta.1"
 
 java {
     toolchain {
@@ -49,6 +49,15 @@ publishing {
             groupId = "fr.redsavant"
             artifactId = "displayapi"
             version = project.version.toString()
+        }
+    }
+    repositories {
+        maven("https://maven.rscomeback.fr/releases") {
+            name = "reposilite"
+            credentials {
+                username = System.getenv("REPOSILITE_TOKEN_NAME")
+                password = System.getenv("REPOSILITE_TOKEN_SECRET")
+            }
         }
     }
 }
