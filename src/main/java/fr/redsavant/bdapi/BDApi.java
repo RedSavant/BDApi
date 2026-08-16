@@ -1,5 +1,9 @@
 package fr.redsavant.bdapi;
 
+import fr.redsavant.bdapi.effects.Effects;
+import fr.redsavant.bdapi.internal.Animator;
+import fr.redsavant.bdapi.internal.DisplayRegistry;
+import fr.redsavant.bdapi.internal.PhysicsEngine;
 import org.bukkit.plugin.Plugin;
 
 public final class BDApi {
@@ -7,9 +11,23 @@ public final class BDApi {
     private static BDApi instance;
 
     private final Plugin plugin;
+    private final DisplayRegistry registry;
+    private final Animator animator;
+    private final PhysicsEngine physicsEngine;
+    private final Displays displays;
+    private final Effects effects;
+
 
     private BDApi(Plugin plugin) {
         this.plugin = plugin;
+        this.registry = new DisplayRegistry();
+        this.animator = new Animator(plugin);
+        this.physicsEngine = new PhysicsEngine(plugin, registry);
+        this.displays = new Displays(plugin, registry, animator, physicsEngine);
+        this.effects = new Effects(displays, plugin);
+
+        this.animator.start();
+        this.physicsEngine.start();
     }
 
     /**
@@ -28,9 +46,13 @@ public final class BDApi {
     /**
      * Method to shut down the BDApi.
      */
-    public static synchronized void shutdown() {
+    public static synchronized void shutdown(boolean removeEntities) {
         if (instance == null) return;
-
+        instance.animator.stop();
+        instance.physicsEngine.stop();
+        if (removeEntities) {
+            instance.registry.removeAll();
+        }
         instance = null;
     }
 
@@ -43,5 +65,17 @@ public final class BDApi {
             throw new IllegalStateException("BDApi is not initalized. Pls init it whit DisplayAPI.init(plugin) at the start of your plugin.");
         }
         return instance;
+    }
+
+    public Displays displays() {
+        return displays;
+    }
+
+    public Effects effects() {
+        return effects;
+    }
+
+    public Plugin plugin() {
+        return plugin;
     }
 }
