@@ -13,4 +13,11 @@ public final class Effects {
         this.plugin = plugin;
     }
 
+    public ExplosionEffect explosion() {
+        return new ExplosionEffect(plugin);
+    }
+
+    public MeteorEffect meteor() {
+        return new MeteorEffect(displays, plugin);
+    }
 }

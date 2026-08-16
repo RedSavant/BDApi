@@ -85,9 +85,9 @@ public final class DisplayGroup {
             if (member.crate != null) {
                 member.crate.remove();
             }
-            members.clear();
-            spawned = false;
         }
+        members.clear();
+        spawned = false;
     }
 
     public List<DisplayCrate> crates() {

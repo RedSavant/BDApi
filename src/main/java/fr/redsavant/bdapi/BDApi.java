@@ -1,5 +1,6 @@
 package fr.redsavant.bdapi;
 
+import fr.redsavant.bdapi.effects.Effects;
 import fr.redsavant.bdapi.internal.Animator;
 import fr.redsavant.bdapi.internal.DisplayRegistry;
 import fr.redsavant.bdapi.internal.PhysicsEngine;
@@ -14,6 +15,7 @@ public final class BDApi {
     private final Animator animator;
     private final PhysicsEngine physicsEngine;
     private final Displays displays;
+    private final Effects effects;
 
 
     private BDApi(Plugin plugin) {
@@ -22,6 +24,7 @@ public final class BDApi {
         this.animator = new Animator(plugin);
         this.physicsEngine = new PhysicsEngine(plugin, registry);
         this.displays = new Displays(plugin, registry, animator, physicsEngine);
+        this.effects = new Effects(displays, plugin);
 
         this.animator.start();
         this.physicsEngine.start();
@@ -66,6 +69,10 @@ public final class BDApi {
 
     public Displays displays() {
         return displays;
+    }
+
+    public Effects effects() {
+        return effects;
     }
 
     public Plugin plugin() {

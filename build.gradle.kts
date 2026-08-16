@@ -36,7 +36,6 @@ tasks.jar {
 tasks.shadowJar {
     archiveBaseName.set("BlockDisplayAPI")
     archiveClassifier.set("shaded")
-    relocate("fr.redsavant.displayapi", "fr.redsavant.libs.displayapi")
 }
 
 tasks.build {

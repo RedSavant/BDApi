@@ -5,6 +5,7 @@ import fr.redsavant.bdapi.internal.Animator;
 import fr.redsavant.bdapi.internal.DisplayRegistry;
 import fr.redsavant.bdapi.internal.PhysicsEngine;
 import fr.redsavant.bdapi.physics.PhysicsBuilder;
+import fr.redsavant.bdapi.timeline.Timeline;
 import fr.redsavant.bdapi.transform.TransformHandle;
 import org.bukkit.Location;
 import org.bukkit.entity.BlockDisplay;
@@ -47,6 +48,10 @@ public final class DisplayCrate {
 
     public PhysicsBuilder physics() {
         return new PhysicsBuilder(this, physicsEngine);
+    }
+
+    public Timeline timeline() {
+        return new Timeline(this, animator, plugin);
     }
 
     public void remove() {

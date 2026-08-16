@@ -4,10 +4,7 @@ import fr.redsavant.bdapi.BDApi;
 import fr.redsavant.bdapi.DisplayCrate;
 import fr.redsavant.bdapi.Displays;
 import fr.redsavant.bdapi.animation.Easing;
-import fr.redsavant.bdapi.effects.ExplosionEffect;
-import fr.redsavant.bdapi.effects.MeteorEffect;
 import fr.redsavant.bdapi.group.DisplayGroup;
-import fr.redsavant.bdapi.timeline.Timeline;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -100,7 +97,7 @@ public final class Main extends JavaPlugin {
         Location start = relative(player, 0, 1, 4);
         DisplayCrate crate = displays().create().at(start).block(Material.GOLD_BLOCK).spawn();
         track(crate);
-        new Timeline(crate, displays().animator(), this)
+        crate.timeline()
                 .easing(Easing.EASE_OUT)
                 .moveTo(start.clone().add(0, 3, 0), 1, TimeUnit.SECONDS)
                 .rotate(0, 180, 0, 1, TimeUnit.SECONDS)
@@ -138,8 +135,8 @@ public final class Main extends JavaPlugin {
 
     private void testEffects(Player player) {
         Location target = relative(player, 7, 1, 4);
-        new ExplosionEffect(this).at(target).power(2).particles(true).spawn();
-        DisplayCrate meteor = new MeteorEffect(displays(), this)
+        BDApi.get().effects().explosion().at(target).power(2).particles(true).spawn();
+        DisplayCrate meteor = BDApi.get().effects().meteor()
                 .at(target.clone().add(3, 0, 0))
                 .fromHeight(15)
                 .size(1.5f)
