@@ -17,7 +17,7 @@ repositories {
 }
 
 dependencies {
-    implementation("fr.redsavant:displayapi:1.0.0-beta.1")
+    implementation("fr.redsavant:bdapi:1.0.0-beta.1")
 }
 ```
 
