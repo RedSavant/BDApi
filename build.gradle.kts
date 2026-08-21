@@ -47,7 +47,7 @@ publishing {
         create<MavenPublication>("maven") {
             from(components["java"])
             groupId = "fr.redsavant"
-            artifactId = "displayapi"
+            artifactId = "bdapi"
             version = project.version.toString()
         }
     }
