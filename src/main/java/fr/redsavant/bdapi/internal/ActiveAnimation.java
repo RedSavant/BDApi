@@ -1,8 +1,8 @@
 package fr.redsavant.bdapi.internal;
 
 import fr.redsavant.bdapi.animation.Easing;
+import fr.redsavant.bdapi.display.DisplayHandle;
 import org.bukkit.Location;
-import org.bukkit.entity.BlockDisplay;
 import org.bukkit.util.Transformation;
 
 import java.util.UUID;
@@ -10,7 +10,7 @@ import java.util.UUID;
 public final class ActiveAnimation {
 
     public final UUID entityId;
-    public final BlockDisplay entity;
+    public final DisplayHandle handle;
 
     public final Location startLocation;
     public final Location endLocation;
@@ -27,11 +27,11 @@ public final class ActiveAnimation {
 
     public boolean finished = false;
 
-    public ActiveAnimation(UUID entityId, BlockDisplay entity, Location startLocation, Location endLocation, boolean animateLocation,
+    public ActiveAnimation(UUID entityId, DisplayHandle handle, Location startLocation, Location endLocation, boolean animateLocation,
                            Transformation startTransform, Transformation endTransform, boolean animateTransform,
                            long durationMillis, Easing easing, Runnable onComplete) {
         this.entityId = entityId;
-        this.entity = entity;
+        this.handle = handle;
         this.startLocation = startLocation;
         this.endLocation = endLocation;
         this.animateLocation = animateLocation;
@@ -48,5 +48,4 @@ public final class ActiveAnimation {
         long elapsed = System.currentTimeMillis() - startTimeMillis;
         return MathUtils.clamp01((double) elapsed / (double) durationMillis);
     }
-
 }

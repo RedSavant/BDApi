@@ -2,17 +2,29 @@ package fr.redsavant.bdapi.builder;
 
 import fr.redsavant.bdapi.DisplayCrate;
 import fr.redsavant.bdapi.Displays;
+import fr.redsavant.bdapi.display.Anchor;
+import fr.redsavant.bdapi.display.DisplayBackend;
+import fr.redsavant.bdapi.display.PacketDisplayHandle;
+import fr.redsavant.bdapi.display.PaperDisplayHandle;
 import fr.redsavant.bdapi.internal.Animator;
 import fr.redsavant.bdapi.internal.DisplayRegistry;
 import fr.redsavant.bdapi.internal.PhysicsEngine;
+import fr.redsavant.bdapi.packet.PacketDisplaySender;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Display;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Transformation;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
+
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.UUID;
 
 public final class BlockDisplayBuilder {
 
@@ -33,6 +45,10 @@ public final class BlockDisplayBuilder {
     private float viewRange = -1f; // Default
     private float shadowRadius = -1f; // Default
     private float shadowStrength = -1f; // Default
+    private DisplayBackend backend;
+    private Anchor anchor = Anchor.CENTER;
+    private boolean global = false;
+    private final Set<UUID> viewers = new LinkedHashSet<>();
 
     public BlockDisplayBuilder(Displays displays, Plugin plugin, DisplayRegistry registry, Animator animator,
                                PhysicsEngine physicsEngine) {
@@ -157,17 +173,70 @@ public final class BlockDisplayBuilder {
         return this;
     }
 
-    /**
-     * Build and spawn the block display
-     * @return crate
-     */
+    public BlockDisplayBuilder backend(DisplayBackend backend) {
+        this.backend = backend;
+        return this;
+    }
+
+    public BlockDisplayBuilder anchor(Anchor anchor) {
+        this.anchor = anchor;
+        return this;
+    }
+
+    public BlockDisplayBuilder viewer(Player player) {
+        this.viewers.add(player.getUniqueId());
+        return this;
+    }
+
+    public BlockDisplayBuilder viewers(Collection<? extends Player> players) {
+        for (Player player : players) {
+            this.viewers.add(player.getUniqueId());
+        }
+        return this;
+    }
+
+    public BlockDisplayBuilder global() {
+        this.global = true;
+        return this;
+    }
+
     public DisplayCrate spawn() {
         if (location == null) {
             throw new IllegalStateException("You need to call .at(location) before .spawn().");
         }
-        BlockDisplay entity = location.getWorld().spawn(location, BlockDisplay.class, this::configure);
-        DisplayCrate crate = new DisplayCrate(entity, plugin, registry, animator, physicsEngine);
+        DisplayBackend resolved = backend != null ? backend : displays.defaultBackend();
+        DisplayCrate crate = resolved == DisplayBackend.PACKET_EVENTS ? spawnPacket() : spawnPaper();
         registry.register(crate);
+        return crate;
+    }
+
+    private DisplayCrate spawnPaper() {
+        BlockDisplay entity = location.getWorld().spawn(location, BlockDisplay.class, this::configure);
+        return new DisplayCrate(new PaperDisplayHandle(entity), plugin, registry, animator, physicsEngine);
+    }
+
+    private DisplayCrate spawnPacket() {
+        PacketDisplaySender sender = displays.packetSender();
+        if (sender == null) {
+            throw new IllegalStateException(
+                    "PacketEvents backend requested but PacketEvents is not installed or initialized.");
+        }
+        PacketDisplayHandle handle = new PacketDisplayHandle(
+                UUID.randomUUID(), displays.entityIdAllocator().next(), sender, global,
+                location, buildTransformation(), material);
+        DisplayCrate crate = new DisplayCrate(handle, plugin, registry, animator, physicsEngine);
+        if (global) {
+            for (Player online : Bukkit.getOnlinePlayers()) {
+                handle.show(online.getUniqueId());
+            }
+        } else if (viewers.isEmpty()) {
+            plugin.getLogger().warning("PACKET_EVENTS display spawned with no viewers and without .global(); "
+                    + "it is visible to nobody until show()/addViewer() is called.");
+        } else {
+            for (UUID viewer : viewers) {
+                handle.show(viewer);
+            }
+        }
         return crate;
     }
 
@@ -207,12 +276,7 @@ public final class BlockDisplayBuilder {
      */
     private Transformation buildTransformation() {
         Quaternionf rotation = euleurToQuaternion(eulerRotation);
-        return new Transformation(
-                new Vector3f(translation),
-                rotation,
-                new Vector3f(scale),
-                new Quaternionf()
-        );
+        return anchor.toTransformation(translation, rotation, scale);
     }
 
     /**

@@ -1,9 +1,9 @@
 package fr.redsavant.bdapi.internal;
 
 import fr.redsavant.bdapi.DisplayCrate;
+import fr.redsavant.bdapi.display.DisplayHandle;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
-import org.bukkit.entity.BlockDisplay;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -46,59 +46,61 @@ public final class PhysicsEngine {
     }
 
     public void submit(PhysicsState state) {
-        active.put(state.crate.entity().getUniqueId(), state);
+        active.put(state.crate.uniqueId(), state);
     }
 
     public void cancel(UUID entityId) {
         active.remove(entityId);
     }
 
-    private void tick() {
+    public void tick() {
         if (active.isEmpty()) return;
 
         for (PhysicsState state : active.values()) {
             DisplayCrate crate = state.crate;
-            BlockDisplay entity = crate.entity();
+            DisplayHandle handle = crate.handle();
 
-            if (entity == null || entity.isDead()) {
-                active.remove(entity != null ? entity.getUniqueId() : null);
+            if (!handle.valid()) {
+                active.remove(handle.uniqueId());
                 continue;
             }
 
-            // Gravity + drag
-            if (state.gravity != 0) {
-                double newY = Math.max(state.velocity.getY() - state.gravity, TERMINAL_VELOCITY);
-                state.velocity.setY(newY);
-            }
-            if (state.drag > 0) {
-                state.velocity.multiply(1.0 - state.drag);
-            }
+            applyForces(state);
 
-            Location current = entity.getLocation();
+            Location current = handle.location();
             Location next = current.clone().add(state.velocity);
 
             Block ground = groundBelow(next);
             if (ground != null) {
-                // Landing
                 Location landed = next.clone();
                 landed.setY(ground.getY() + 1.0);
 
                 double reboundVelocity = Math.abs(state.velocity.getY()) * state.bounce;
                 if (state.bounce > 0 && reboundVelocity > GROUND_EPSILON) {
-                    entity.teleport(landed);
+                    handle.teleport(landed);
                     state.velocity.setY(reboundVelocity);
                 } else {
-                    entity.teleport(landed);
+                    handle.teleport(landed);
                     state.velocity.setY(0);
                     state.grounded = true;
-                    active.remove(entity.getUniqueId());
+                    active.remove(handle.uniqueId());
                     if (state.onLand != null) {
                         state.onLand.accept(crate);
                     }
                 }
             } else {
-                entity.teleport(next);
+                handle.teleport(next);
             }
+        }
+    }
+
+    public static void applyForces(PhysicsState state) {
+        if (state.gravity != 0) {
+            double newY = Math.max(state.velocity.getY() - state.gravity, TERMINAL_VELOCITY);
+            state.velocity.setY(newY);
+        }
+        if (state.drag > 0) {
+            state.velocity.multiply(1.0 - state.drag);
         }
     }
 
