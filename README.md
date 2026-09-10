@@ -1,5 +1,5 @@
 <div align="center">
-    <img src="http://82.67.204.66:25608/mark.svg" width="150px" height="150px" />
+    <img src="https://cdn.rscomeback.fr/bdapi/mark.svg" width="150px" height="150px" />
 </div>
 
 # BDApi
