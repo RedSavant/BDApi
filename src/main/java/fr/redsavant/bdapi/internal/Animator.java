@@ -1,7 +1,7 @@
 package fr.redsavant.bdapi.internal;
 
+import fr.redsavant.bdapi.display.DisplayHandle;
 import org.bukkit.Location;
-import org.bukkit.entity.BlockDisplay;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -53,11 +53,11 @@ public final class Animator {
         return active.containsKey(entityId);
     }
 
-    private void tick() {
+    public void tick() {
         if (active.isEmpty()) return;
 
         for (ActiveAnimation anim : active.values()) {
-            if (anim.entity == null || anim.entity.isDead()) {
+            if (anim.handle == null || !anim.handle.valid()) {
                 active.remove(anim.entityId);
                 continue;
             }
@@ -87,12 +87,12 @@ public final class Animator {
         double x = from.getX() + (to.getX() - from.getX()) * t;
         double y = from.getY() + (to.getY() - from.getY()) * t;
         double z = from.getZ() + (to.getZ() - from.getZ()) * t;
-        Location newLoc = new Location(from.getWorld(), x, y, z, anim.entity.getLocation().getYaw(), anim.entity.getLocation().getPitch());
-        anim.entity.teleport(newLoc);
+        Location current = anim.handle.location();
+        Location newLoc = new Location(from.getWorld(), x, y, z, current.getYaw(), current.getPitch());
+        anim.handle.teleport(newLoc);
     }
 
     private void applyTransform(ActiveAnimation anim, double t) {
-        BlockDisplay entity = anim.entity;
         Transformation from = anim.startTransform;
         Transformation to = anim.endTransform;
 
@@ -100,6 +100,6 @@ public final class Animator {
         Vector3f scale = MathUtils.lerp(from.getScale(), to.getScale(), t, new Vector3f());
         Quaternionf leftRotation = MathUtils.slerp(new Quaternionf(from.getLeftRotation()), new Quaternionf(to.getLeftRotation()), t, new Quaternionf());
 
-        entity.setTransformation(new Transformation(translation, leftRotation, scale, new Quaternionf()));
+        anim.handle.transformation(new Transformation(translation, leftRotation, scale, new Quaternionf()));
     }
 }
