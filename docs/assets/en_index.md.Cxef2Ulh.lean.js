@@ -1,1 +1,0 @@
-import{_t as e,it as t,n,rt as r}from"./chunks/framework.BVGGWBQY.js";var i=JSON.parse(`{"title":"BDApi","description":"","frontmatter":{},"headers":[],"relativePath":"en/index.md","filePath":"en/index.md"}`),a={name:`en/index.md`};function o(n,i,a,o,s,c){return e(),r(`div`,null,[...i[0]||=[t("",95)]])}var s=n(a,[[`render`,o]]);export{i as __pageData,s as default};
