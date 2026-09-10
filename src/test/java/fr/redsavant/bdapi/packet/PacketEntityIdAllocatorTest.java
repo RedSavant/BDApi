@@ -26,4 +26,11 @@ class PacketEntityIdAllocatorTest {
         assertEquals(11, allocator.next());
         assertEquals(12, allocator.next());
     }
+
+    @Test
+    void wrapsToStayPositiveAtMaxValue() {
+        PacketEntityIdAllocator allocator = new PacketEntityIdAllocator(Integer.MAX_VALUE - 1);
+        assertEquals(Integer.MAX_VALUE, allocator.next());
+        assertEquals(Integer.MAX_VALUE, allocator.next());
+    }
 }
