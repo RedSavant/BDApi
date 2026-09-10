@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
+import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -33,6 +34,7 @@ class BackendSelectionTest {
         registry = new DisplayRegistry();
         sender = new RecordingPacketDisplaySender();
         plugin = mock(Plugin.class);
+        when(plugin.getLogger()).thenReturn(Logger.getLogger("BackendSelectionTest"));
     }
 
     private Displays displays(DisplayBackend backend, RecordingPacketDisplaySender packetSender) {

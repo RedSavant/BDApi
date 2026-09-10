@@ -229,6 +229,9 @@ public final class BlockDisplayBuilder {
             for (Player online : Bukkit.getOnlinePlayers()) {
                 handle.show(online.getUniqueId());
             }
+        } else if (viewers.isEmpty()) {
+            plugin.getLogger().warning("PACKET_EVENTS display spawned with no viewers and without .global(); "
+                    + "it is visible to nobody until show()/addViewer() is called.");
         } else {
             for (UUID viewer : viewers) {
                 handle.show(viewer);
