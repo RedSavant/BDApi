@@ -58,7 +58,7 @@ public final class BDApi {
 
     public static synchronized BDApi init(Plugin plugin, BDApiConfig config) {
         if (instance != null) {
-            throw new IllegalStateException("DBApi is already loaded");
+            throw new IllegalStateException("BDApi is already loaded");
         }
         instance = new BDApi(plugin, config);
         return instance;
@@ -76,7 +76,7 @@ public final class BDApi {
 
     public static BDApi get() {
         if (instance == null) {
-            throw new IllegalStateException("BDApi is not initalized. Pls init it whit DisplayAPI.init(plugin) at the start of your plugin.");
+            throw new IllegalStateException("BDApi is not initialized. Call BDApi.init(plugin) at the start of your plugin.");
         }
         return instance;
     }
