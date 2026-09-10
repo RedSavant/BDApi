@@ -40,5 +40,9 @@ bin/
 ### VS Code ###
 .vscode/
 
+### Claude ###
+.claude/
+.idea/discord.xml
+
 ### Mac OS ###
 .DS_Store
