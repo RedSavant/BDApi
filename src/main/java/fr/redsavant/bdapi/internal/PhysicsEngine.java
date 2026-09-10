@@ -65,13 +65,7 @@ public final class PhysicsEngine {
                 continue;
             }
 
-            if (state.gravity != 0) {
-                double newY = Math.max(state.velocity.getY() - state.gravity, TERMINAL_VELOCITY);
-                state.velocity.setY(newY);
-            }
-            if (state.drag > 0) {
-                state.velocity.multiply(1.0 - state.drag);
-            }
+            applyForces(state);
 
             Location current = handle.location();
             Location next = current.clone().add(state.velocity);
@@ -97,6 +91,16 @@ public final class PhysicsEngine {
             } else {
                 handle.teleport(next);
             }
+        }
+    }
+
+    public static void applyForces(PhysicsState state) {
+        if (state.gravity != 0) {
+            double newY = Math.max(state.velocity.getY() - state.gravity, TERMINAL_VELOCITY);
+            state.velocity.setY(newY);
+        }
+        if (state.drag > 0) {
+            state.velocity.multiply(1.0 - state.drag);
         }
     }
 
