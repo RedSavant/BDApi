@@ -11,6 +11,8 @@ import fr.redsavant.bdapi.physics.PhysicsBuilder;
 import fr.redsavant.bdapi.timeline.Timeline;
 import fr.redsavant.bdapi.transform.TransformHandle;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -53,6 +55,18 @@ public final class DisplayCrate {
 
     public Location location() {
         return handle.location();
+    }
+
+    public BlockData blockData() {
+        return handle.blockData();
+    }
+
+    public void block(BlockData blockData) {
+        handle.block(blockData);
+    }
+
+    public void block(Material material) {
+        handle.block(material.createBlockData());
     }
 
     public Optional<BlockDisplay> bukkitEntity() {
