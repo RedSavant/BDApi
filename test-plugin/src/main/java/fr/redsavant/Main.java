@@ -13,6 +13,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,6 +58,22 @@ public final class Main extends JavaPlugin {
             default -> player.sendMessage("Usage: /bdtest <all|display|paper|packet|packetprivate|offset|animation|timeline|group|physics|effects|clear>");
         }
         return true;
+    }
+
+    private static final List<String> SUBCOMMANDS = List.of(
+            "all", "display", "paper", "packet", "packetprivate",
+            "offset", "animation", "timeline", "group", "physics", "effects", "clear"
+    );
+
+    @Override
+    public @Nullable List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (args.length == 1) {
+            String partial = args[0].toLowerCase();
+            return SUBCOMMANDS.stream()
+                    .filter(s -> s.startsWith(partial))
+                    .toList();
+        }
+        return List.of();
     }
 
     private void testPaper(Player player) {
