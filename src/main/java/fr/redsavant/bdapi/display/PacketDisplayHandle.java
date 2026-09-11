@@ -2,7 +2,9 @@ package fr.redsavant.bdapi.display;
 
 import fr.redsavant.bdapi.packet.PacketDisplaySender;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.entity.Display;
 import org.bukkit.util.Transformation;
 
 import java.util.Collections;
@@ -30,6 +32,14 @@ public final class PacketDisplayHandle implements DisplayHandle {
         this.global = global;
         this.location = location.clone();
         this.state = state;
+    }
+
+    @Deprecated
+    public PacketDisplayHandle(UUID uuid, int entityId, PacketDisplaySender sender, boolean global,
+                               Location location, Transformation transformation, Material material) {
+        this(uuid, entityId, sender, global, location,
+                new BlockDisplayState(material.createBlockData(), transformation,
+                        Display.Billboard.FIXED, null, -1f, -1f, -1f));
     }
 
     public BlockDisplayState state() {

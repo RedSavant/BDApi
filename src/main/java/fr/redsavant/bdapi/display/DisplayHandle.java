@@ -1,6 +1,7 @@
 package fr.redsavant.bdapi.display;
 
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.util.Transformation;
 
@@ -26,6 +27,11 @@ public interface DisplayHandle {
     void transformation(Transformation transformation);
 
     void block(BlockData blockData);
+
+    @Deprecated
+    default void block(Material material) {
+        block(material.createBlockData());
+    }
 
     boolean valid();
 
