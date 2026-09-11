@@ -80,7 +80,7 @@ public final class AnimationBuilder {
         Location startLoc = crate.location().clone();
         Location endLoc = animateLocation ? targetLocation.clone() : startLoc;
 
-        Transformation current = crate.entity().getTransformation();
+        Transformation current = crate.handle().transformation();
         Vector3f endScale = targetScale != null ? targetScale : new Vector3f(current.getScale());
         Vector3f endTranslation = targetTranslation != null ? targetTranslation : new Vector3f(current.getTranslation());
         Quaternionf endRotation = targetEulerRotation != null
@@ -90,8 +90,8 @@ public final class AnimationBuilder {
         Transformation endTransform = new Transformation(endTranslation, endRotation, endScale, new Quaternionf());
 
         ActiveAnimation animation = new ActiveAnimation(
-                crate.entity().getUniqueId(),
-                crate.entity(),
+                crate.handle().uniqueId(),
+                crate.handle(),
                 startLoc, endLoc, animateLocation,
                 current, endTransform, animateTransform,
                 durationMillis, easing, onComplete

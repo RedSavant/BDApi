@@ -4,6 +4,8 @@ import fr.redsavant.bdapi.BDApi;
 import fr.redsavant.bdapi.DisplayCrate;
 import fr.redsavant.bdapi.Displays;
 import fr.redsavant.bdapi.animation.Easing;
+import fr.redsavant.bdapi.display.Anchor;
+import fr.redsavant.bdapi.display.DisplayBackend;
 import fr.redsavant.bdapi.group.DisplayGroup;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -11,6 +13,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,15 +45,87 @@ public final class Main extends JavaPlugin {
         switch (test) {
             case "all" -> runAll(player);
             case "display" -> testDisplay(player);
+            case "paper" -> testPaper(player);
+            case "packet" -> testPacket(player);
+            case "packetprivate" -> testPacketPrivate(player);
+            case "offset" -> testOffset(player);
             case "animation" -> testAnimation(player);
             case "timeline" -> testTimeline(player);
             case "group" -> testGroup(player);
             case "physics" -> testPhysics(player);
             case "effects" -> testEffects(player);
             case "clear" -> clearDisplays(player);
-            default -> player.sendMessage("Usage: /bdtest <all|display|animation|timeline|group|physics|effects|clear>");
+            default -> player.sendMessage("Usage: /bdtest <all|display|paper|packet|packetprivate|offset|animation|timeline|group|physics|effects|clear>");
         }
         return true;
+    }
+
+    private static final List<String> SUBCOMMANDS = List.of(
+            "all", "display", "paper", "packet", "packetprivate",
+            "offset", "animation", "timeline", "group", "physics", "effects", "clear"
+    );
+
+    @Override
+    public @Nullable List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (args.length == 1) {
+            String partial = args[0].toLowerCase();
+            return SUBCOMMANDS.stream()
+                    .filter(s -> s.startsWith(partial))
+                    .toList();
+        }
+        return List.of();
+    }
+
+    private void testPaper(Player player) {
+        DisplayCrate crate = displays().create()
+                .backend(DisplayBackend.PAPER)
+                .at(relative(player, -4, 1, 4))
+                .block(Material.DIAMOND_BLOCK)
+                .scale(1.5f)
+                .spawn();
+        track(crate);
+        player.sendMessage("Paper display spawned (" + crate.backend() + ").");
+    }
+
+    private void testPacket(Player player) {
+        try {
+            DisplayCrate crate = displays().create()
+                    .backend(DisplayBackend.PACKET_EVENTS)
+                    .global()
+                    .at(relative(player, -2, 1, 4))
+                    .block(Material.EMERALD_BLOCK)
+                    .scale(1.5f)
+                    .spawn();
+            track(crate);
+            player.sendMessage("Global packet display spawned for " + crate.viewers().size() + " viewers.");
+        } catch (IllegalStateException ex) {
+            player.sendMessage(ex.getMessage());
+        }
+    }
+
+    private void testPacketPrivate(Player player) {
+        try {
+            DisplayCrate crate = displays().create()
+                    .backend(DisplayBackend.PACKET_EVENTS)
+                    .viewer(player)
+                    .at(relative(player, 0, 1, 4))
+                    .block(Material.GOLD_BLOCK)
+                    .scale(1.5f)
+                    .spawn();
+            track(crate);
+            player.sendMessage("Private packet display spawned, visible only to you.");
+        } catch (IllegalStateException ex) {
+            player.sendMessage(ex.getMessage());
+        }
+    }
+
+    private void testOffset(Player player) {
+        Location base = relative(player, 2, 1, 4).getBlock().getLocation();
+        track(displays().create().at(base).block(Material.STONE).scale(1f).spawn());
+        track(displays().create().at(base.clone().add(2, 0, 0)).block(Material.STONE).scale(2f).spawn());
+        track(displays().create().at(base.clone().add(4, 0, 0)).block(Material.STONE).scale(2f).rotate(0, 45, 0).spawn());
+        track(displays().create().anchor(Anchor.CORNER).at(base.clone().add(6, 0, 0)).block(Material.STONE).scale(2f).spawn());
+        player.sendMessage("Offset row: centered scale 1, centered scale 2, centered rotated, corner scale 2.");
     }
 
     private void runAll(Player player) {

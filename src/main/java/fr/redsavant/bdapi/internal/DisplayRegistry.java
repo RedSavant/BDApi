@@ -11,15 +11,15 @@ public final class DisplayRegistry {
     private final Map<UUID, DisplayCrate> crates = new ConcurrentHashMap<>();
 
     public void register(DisplayCrate crate) {
-        crates.put(crate.entity().getUniqueId(), crate);
+        crates.put(crate.uniqueId(), crate);
     }
 
-    public void unregister(UUID entityId) {
-        crates.remove(entityId);
+    public void unregister(UUID uniqueId) {
+        crates.remove(uniqueId);
     }
 
-    public DisplayCrate get(UUID entityId) {
-        return crates.get(entityId);
+    public DisplayCrate get(UUID uniqueId) {
+        return crates.get(uniqueId);
     }
 
     public Collection<DisplayCrate> all() {
@@ -28,9 +28,7 @@ public final class DisplayRegistry {
 
     public void removeAll() {
         for (DisplayCrate crate : crates.values()) {
-            if (crate.entity() != null && !crate.entity().isDead()) {
-                crate.entity().remove();
-            }
+            crate.handle().remove();
         }
         crates.clear();
     }
