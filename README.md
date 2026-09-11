@@ -22,7 +22,7 @@ repositories {
 }
 
 dependencies {
-    implementation("fr.redsavant:bdapi:1.0.0-beta.1")
+    implementation("fr.redsavant:bdapi:1.1.0-beta.1")
 }
 ```
 
@@ -168,4 +168,4 @@ Timelines, display groups, transformations, meteor effects and explosion effects
 
 ## Status
 
-BDApi is currently available as `1.0.0-beta.1`. The API may change between versions.
+BDApi is currently available as `1.1.0-beta.1`. The API may change between versions.
