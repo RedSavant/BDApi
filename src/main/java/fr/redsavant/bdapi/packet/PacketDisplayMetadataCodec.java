@@ -42,7 +42,8 @@ final class PacketDisplayMetadataCodec {
         data.add(new EntityData<>(SCALE, EntityDataTypes.VECTOR3F, new Vector3f(scale.x, scale.y, scale.z)));
         data.add(new EntityData<>(LEFT_ROTATION, EntityDataTypes.QUATERNION, new Quaternion4f(left.x, left.y, left.z, left.w)));
         data.add(new EntityData<>(RIGHT_ROTATION, EntityDataTypes.QUATERNION, new Quaternion4f(right.x, right.y, right.z, right.w)));
-        data.add(new EntityData<>(BLOCK_STATE, EntityDataTypes.BLOCK_STATE, blockStateId(display)));
+        data.add(new EntityData<>(BLOCK_STATE, EntityDataTypes.BLOCK_STATE,
+                SpigotConversionUtil.fromBukkitBlockData(display.material().createBlockData())));
         return data;
     }
 
