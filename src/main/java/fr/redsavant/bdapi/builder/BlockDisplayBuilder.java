@@ -3,6 +3,7 @@ package fr.redsavant.bdapi.builder;
 import fr.redsavant.bdapi.DisplayCrate;
 import fr.redsavant.bdapi.Displays;
 import fr.redsavant.bdapi.display.Anchor;
+import fr.redsavant.bdapi.display.BlockDisplayState;
 import fr.redsavant.bdapi.display.DisplayBackend;
 import fr.redsavant.bdapi.display.PacketDisplayHandle;
 import fr.redsavant.bdapi.display.PaperDisplayHandle;
@@ -13,6 +14,7 @@ import fr.redsavant.bdapi.packet.PacketDisplaySender;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Player;
@@ -36,6 +38,7 @@ public final class BlockDisplayBuilder {
 
     private Location location;
     private Material material = Material.STONE; // Default material if not defined in the builder
+    private BlockData blockData; // Overrides material when set
     private final Vector3f scale = new Vector3f(1f, 1f, 1f); // Default
     private final Vector3f translation = new Vector3f(0f, 0f, 0f); // Default
     private final Vector3f eulerRotation = new Vector3f(0f, 0f, 0f); // Default
@@ -80,6 +83,17 @@ public final class BlockDisplayBuilder {
             throw new IllegalArgumentException(material + " is not a bloc.");
         }
         this.material = material;
+        this.blockData = null;
+        return this;
+    }
+
+    /**
+     * Block data of the block display, allowing full block states.
+     * @param blockData
+     * @return this
+     */
+    public BlockDisplayBuilder block(BlockData blockData) {
+        this.blockData = blockData.clone();
         return this;
     }
 
@@ -211,7 +225,9 @@ public final class BlockDisplayBuilder {
     }
 
     private DisplayCrate spawnPaper() {
-        BlockDisplay entity = location.getWorld().spawn(location, BlockDisplay.class, this::configure);
+        BlockDisplayState state = buildState();
+        BlockDisplay entity = location.getWorld().spawn(location, BlockDisplay.class,
+                e -> PaperDisplayHandle.applyTo(e, state));
         return new DisplayCrate(new PaperDisplayHandle(entity), plugin, registry, animator, physicsEngine);
     }
 
@@ -223,7 +239,7 @@ public final class BlockDisplayBuilder {
         }
         PacketDisplayHandle handle = new PacketDisplayHandle(
                 UUID.randomUUID(), displays.entityIdAllocator().next(), sender, global,
-                location, buildTransformation(), material);
+                location, buildState());
         DisplayCrate crate = new DisplayCrate(handle, plugin, registry, animator, physicsEngine);
         if (global) {
             for (Player online : Bukkit.getOnlinePlayers()) {
@@ -248,26 +264,13 @@ public final class BlockDisplayBuilder {
         return spawn();
     }
 
-    /**
-     * Set parameters of block display
-     * @param entity
-     */
-    private void configure(BlockDisplay entity) {
-        entity.setBlock(material.createBlockData());
-        entity.setBillboard(billboard);
-        if (brightnessBlock >= 0 && brightnessSky >= 0) {
-            entity.setBrightness(new Display.Brightness(brightnessBlock, brightnessSky));
-        }
-        if (viewRange >= 0) {
-            entity.setViewRange(viewRange);
-        }
-        if (shadowRadius >= 0) {
-            entity.setShadowRadius(shadowRadius);
-        }
-        if (shadowStrength >= 0) {
-            entity.setShadowStrength(shadowStrength);
-        }
-        entity.setTransformation(buildTransformation());
+    private BlockDisplayState buildState() {
+        BlockData resolved = blockData != null ? blockData.clone() : material.createBlockData();
+        Display.Brightness brightness = brightnessBlock >= 0 && brightnessSky >= 0
+                ? new Display.Brightness(brightnessBlock, brightnessSky)
+                : null;
+        return new BlockDisplayState(resolved, buildTransformation(), billboard, brightness,
+                viewRange, shadowRadius, shadowStrength);
     }
 
     /**

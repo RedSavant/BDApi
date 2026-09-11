@@ -40,6 +40,7 @@ class AnimationBackendTest {
 
         DisplayCrate crate = displays.create()
                 .viewer(viewer)
+                .block(fr.redsavant.bdapi.support.DisplayStates.mockBlockData("stone"))
                 .at(new Location(null, 0, 64, 0))
                 .spawn();
 

@@ -7,10 +7,13 @@ import fr.redsavant.bdapi.animation.Easing;
 import fr.redsavant.bdapi.display.Anchor;
 import fr.redsavant.bdapi.display.DisplayBackend;
 import fr.redsavant.bdapi.group.DisplayGroup;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Display;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jspecify.annotations.Nullable;
@@ -49,13 +52,15 @@ public final class Main extends JavaPlugin {
             case "packet" -> testPacket(player);
             case "packetprivate" -> testPacketPrivate(player);
             case "offset" -> testOffset(player);
+            case "blockdata" -> testBlockData(player);
+            case "parity" -> testParity(player);
             case "animation" -> testAnimation(player);
             case "timeline" -> testTimeline(player);
             case "group" -> testGroup(player);
             case "physics" -> testPhysics(player);
             case "effects" -> testEffects(player);
             case "clear" -> clearDisplays(player);
-            default -> player.sendMessage("Usage: /bdtest <all|display|paper|packet|packetprivate|offset|animation|timeline|group|physics|effects|clear>");
+            default -> player.sendMessage("Usage: /bdtest <all|display|paper|packet|packetprivate|offset|blockdata|parity|animation|timeline|group|physics|effects|clear>");
         }
         return true;
     }
@@ -126,6 +131,32 @@ public final class Main extends JavaPlugin {
         track(displays().create().at(base.clone().add(4, 0, 0)).block(Material.STONE).scale(2f).rotate(0, 45, 0).spawn());
         track(displays().create().anchor(Anchor.CORNER).at(base.clone().add(6, 0, 0)).block(Material.STONE).scale(2f).spawn());
         player.sendMessage("Offset row: centered scale 1, centered scale 2, centered rotated, corner scale 2.");
+    }
+
+    private void testBlockData(Player player) {
+        BlockData north = Bukkit.createBlockData("minecraft:oak_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]");
+        BlockData east = Bukkit.createBlockData("minecraft:oak_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]");
+        track(displays().create().at(relative(player, -1, 1, 4)).block(north).scale(1.5f).spawn());
+        track(displays().create().at(relative(player, 1, 1, 4)).block(east).scale(1.5f).spawn());
+        player.sendMessage("BlockData test: oak stairs facing north and east side by side.");
+    }
+
+    private void testParity(Player player) {
+        Location base = relative(player, 0, 1, 5);
+        BlockData stairs = Bukkit.createBlockData("minecraft:oak_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]");
+        track(configureParity(displays().create().backend(DisplayBackend.PAPER).at(base), stairs).spawn());
+        try {
+            track(configureParity(displays().create().backend(DisplayBackend.PACKET_EVENTS).global().at(base.clone().add(2, 0, 0)), stairs).spawn());
+            player.sendMessage("Parity: Paper (left) and PacketEvents (right) with identical configuration.");
+        } catch (IllegalStateException ex) {
+            player.sendMessage(ex.getMessage());
+        }
+    }
+
+    private fr.redsavant.bdapi.builder.BlockDisplayBuilder configureParity(
+            fr.redsavant.bdapi.builder.BlockDisplayBuilder builder, BlockData blockData) {
+        return builder.block(blockData).scale(1.5f).rotate(0, 45, 0)
+                .brightness(15, 15).billboard(Display.Billboard.FIXED).shadow(1f, 0.5f);
     }
 
     private void runAll(Player player) {

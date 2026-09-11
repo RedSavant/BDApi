@@ -89,6 +89,22 @@ DisplayCrate crate = BDApi.get().displays().create()
         .spawn();
 ```
 
+## Block data
+
+`.block(Material material)` is a convenience for simple blocks. Use `.block(BlockData blockData)` when block properties matter, such as stair orientation or slab type:
+
+```java
+BlockData stairs = Bukkit.createBlockData("minecraft:oak_stairs[facing=east]");
+
+DisplayCrate crate = BDApi.get().displays().create()
+        .backend(DisplayBackend.PACKET_EVENTS)
+        .at(location)
+        .block(stairs)
+        .spawn();
+```
+
+The block state can also be changed at runtime with `crate.block(blockData)` or `crate.block(material)`.
+
 ## Per-player and global displays
 
 Packet displays can target specific players or all players:
@@ -157,6 +173,8 @@ BDApi computes the logical movement; the backend decides how the new state reach
 Use `.anchor(Anchor.CORNER)` to keep the raw Minecraft behavior where scaling and rotation pivot around the block's minimum corner.
 
 Both backends share the same coordinate and transform logic, so the same `.at(location)` and transformation produce the same visual result.
+
+The builder's visual properties — block data, transformation, brightness, billboard, view range and shadow — now behave consistently across the Paper and PacketEvents backends wherever the Minecraft protocol supports them.
 
 Timelines, display groups, transformations, meteor effects and explosion effects are also available.
 

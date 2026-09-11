@@ -28,6 +28,7 @@ class BackendSelectionTest {
     private DisplayRegistry registry;
     private RecordingPacketDisplaySender sender;
     private Plugin plugin;
+    private org.bukkit.block.data.BlockData blockData;
 
     @BeforeEach
     void setUp() {
@@ -35,6 +36,7 @@ class BackendSelectionTest {
         sender = new RecordingPacketDisplaySender();
         plugin = mock(Plugin.class);
         when(plugin.getLogger()).thenReturn(Logger.getLogger("BackendSelectionTest"));
+        blockData = fr.redsavant.bdapi.support.DisplayStates.mockBlockData("stone");
     }
 
     private Displays displays(DisplayBackend backend, RecordingPacketDisplaySender packetSender) {
@@ -52,6 +54,7 @@ class BackendSelectionTest {
     void explicitPacketBackendSpawnsClientSideDisplay() {
         DisplayCrate crate = displays(DisplayBackend.PAPER, sender).create()
                 .backend(DisplayBackend.PACKET_EVENTS)
+                .block(blockData)
                 .at(new Location(null, 0, 64, 0))
                 .spawn();
         assertEquals(DisplayBackend.PACKET_EVENTS, crate.backend());
@@ -61,6 +64,7 @@ class BackendSelectionTest {
     @Test
     void defaultPacketBackendUsedWhenNotOverridden() {
         DisplayCrate crate = displays(DisplayBackend.PACKET_EVENTS, sender).create()
+                .block(blockData)
                 .at(new Location(null, 0, 64, 0))
                 .spawn();
         assertEquals(DisplayBackend.PACKET_EVENTS, crate.backend());
@@ -84,6 +88,7 @@ class BackendSelectionTest {
         DisplayCrate crate = displays(DisplayBackend.PACKET_EVENTS, sender).create()
                 .backend(DisplayBackend.PACKET_EVENTS)
                 .viewer(viewer)
+                .block(blockData)
                 .at(new Location(null, 0, 64, 0))
                 .spawn();
 
@@ -94,8 +99,8 @@ class BackendSelectionTest {
     @Test
     void removeUnregistersAndShutdownCleansUp() {
         Displays displays = displays(DisplayBackend.PACKET_EVENTS, sender);
-        DisplayCrate a = displays.create().at(new Location(null, 0, 64, 0)).spawn();
-        DisplayCrate b = displays.create().at(new Location(null, 1, 64, 0)).spawn();
+        DisplayCrate a = displays.create().block(blockData).at(new Location(null, 0, 64, 0)).spawn();
+        DisplayCrate b = displays.create().block(blockData).at(new Location(null, 1, 64, 0)).spawn();
 
         assertEquals(2, registry.all().size());
         a.remove();

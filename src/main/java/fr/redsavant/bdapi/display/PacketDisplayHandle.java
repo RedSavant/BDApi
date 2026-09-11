@@ -3,6 +3,8 @@ package fr.redsavant.bdapi.display;
 import fr.redsavant.bdapi.packet.PacketDisplaySender;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.entity.Display;
 import org.bukkit.util.Transformation;
 
 import java.util.Collections;
@@ -19,23 +21,29 @@ public final class PacketDisplayHandle implements DisplayHandle {
     private final Set<UUID> viewers = new LinkedHashSet<>();
 
     private Location location;
-    private Transformation transformation;
-    private Material material;
+    private final BlockDisplayState state;
     private boolean removed;
 
     public PacketDisplayHandle(UUID uuid, int entityId, PacketDisplaySender sender, boolean global,
-                               Location location, Transformation transformation, Material material) {
+                               Location location, BlockDisplayState state) {
         this.uuid = uuid;
         this.entityId = entityId;
         this.sender = sender;
         this.global = global;
         this.location = location.clone();
-        this.transformation = transformation;
-        this.material = material;
+        this.state = state;
     }
 
-    public Material material() {
-        return material;
+    @Deprecated
+    public PacketDisplayHandle(UUID uuid, int entityId, PacketDisplaySender sender, boolean global,
+                               Location location, Transformation transformation, Material material) {
+        this(uuid, entityId, sender, global, location,
+                new BlockDisplayState(material.createBlockData(), transformation,
+                        Display.Billboard.FIXED, null, -1f, -1f, -1f));
+    }
+
+    public BlockDisplayState state() {
+        return state;
     }
 
     @Override
@@ -60,7 +68,12 @@ public final class PacketDisplayHandle implements DisplayHandle {
 
     @Override
     public Transformation transformation() {
-        return transformation;
+        return state.transformation();
+    }
+
+    @Override
+    public BlockData blockData() {
+        return state.blockData();
     }
 
     @Override
@@ -76,21 +89,21 @@ public final class PacketDisplayHandle implements DisplayHandle {
 
     @Override
     public void transformation(Transformation target) {
-        if (removed || target.equals(transformation)) {
+        if (removed || target.equals(state.transformation())) {
             return;
         }
-        this.transformation = target;
+        state.transformation(target);
         for (UUID viewer : viewers) {
             sender.metadata(viewer, this);
         }
     }
 
     @Override
-    public void block(Material target) {
-        if (removed || target == material) {
+    public void block(BlockData target) {
+        if (removed || target.matches(state.blockData())) {
             return;
         }
-        this.material = target;
+        state.blockData(target);
         for (UUID viewer : viewers) {
             sender.metadata(viewer, this);
         }
