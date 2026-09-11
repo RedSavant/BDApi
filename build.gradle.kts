@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "fr.redsavant"
-version = "1.0.0-beta.1"
+version = "1.1.0-beta.1"
 
 java {
     toolchain {
