@@ -1,7 +1,7 @@
 package fr.redsavant.bdapi.display;
 
 import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.util.Transformation;
 
@@ -15,6 +15,24 @@ public final class PaperDisplayHandle implements DisplayHandle {
 
     public PaperDisplayHandle(BlockDisplay entity) {
         this.entity = entity;
+    }
+
+    public static void applyTo(BlockDisplay entity, BlockDisplayState state) {
+        entity.setBlock(state.blockData());
+        entity.setBillboard(state.billboard());
+        if (state.hasBrightness()) {
+            entity.setBrightness(state.brightness());
+        }
+        if (state.hasViewRange()) {
+            entity.setViewRange(state.viewRange());
+        }
+        if (state.hasShadowRadius()) {
+            entity.setShadowRadius(state.shadowRadius());
+        }
+        if (state.hasShadowStrength()) {
+            entity.setShadowStrength(state.shadowStrength());
+        }
+        entity.setTransformation(state.transformation());
     }
 
     public BlockDisplay entity() {
@@ -47,6 +65,11 @@ public final class PaperDisplayHandle implements DisplayHandle {
     }
 
     @Override
+    public BlockData blockData() {
+        return entity.getBlock();
+    }
+
+    @Override
     public void teleport(Location location) {
         entity.teleport(location);
     }
@@ -57,8 +80,8 @@ public final class PaperDisplayHandle implements DisplayHandle {
     }
 
     @Override
-    public void block(Material material) {
-        entity.setBlock(material.createBlockData());
+    public void block(BlockData blockData) {
+        entity.setBlock(blockData);
     }
 
     @Override
