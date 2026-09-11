@@ -1,10 +1,9 @@
 package fr.redsavant.bdapi.display;
 
+import fr.redsavant.bdapi.support.DisplayStates;
 import fr.redsavant.bdapi.support.RecordingPacketDisplaySender;
 import fr.redsavant.bdapi.support.RecordingPacketDisplaySender.Type;
 import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.util.Transformation;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,9 +28,8 @@ class PacketDisplayHandleTest {
     }
 
     private PacketDisplayHandle handle(boolean global) {
-        Transformation tf = Anchor.CENTER.toTransformation(new Vector3f(), new Quaternionf(), new Vector3f(1, 1, 1));
         return new PacketDisplayHandle(UUID.randomUUID(), 7, sender, global,
-                new Location(null, 1, 2, 3), tf, Material.STONE);
+                new Location(null, 1, 2, 3), DisplayStates.simple());
     }
 
     @Test
