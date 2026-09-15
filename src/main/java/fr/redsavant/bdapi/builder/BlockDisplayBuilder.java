@@ -47,6 +47,7 @@ public final class BlockDisplayBuilder {
     private float shadowStrength = -1f; // Default
     private DisplayBackend backend;
     private Anchor anchor = Anchor.CENTER;
+    private Vector3f customPivot;
     private boolean global = false;
     private final Set<UUID> viewers = new LinkedHashSet<>();
 
@@ -180,6 +181,19 @@ public final class BlockDisplayBuilder {
 
     public BlockDisplayBuilder anchor(Anchor anchor) {
         this.anchor = anchor;
+        this.customPivot = null;
+        return this;
+    }
+
+    /**
+     * Custom pivot point in block-model space (each axis 0..1) around which scaling and rotation are applied.
+     * @param x
+     * @param y
+     * @param z
+     * @return this
+     */
+    public BlockDisplayBuilder pivot(float x, float y, float z) {
+        this.customPivot = new Vector3f(x, y, z);
         return this;
     }
 
@@ -276,6 +290,9 @@ public final class BlockDisplayBuilder {
      */
     private Transformation buildTransformation() {
         Quaternionf rotation = euleurToQuaternion(eulerRotation);
+        if (customPivot != null) {
+            return Anchor.transformation(customPivot, translation, rotation, scale);
+        }
         return anchor.toTransformation(translation, rotation, scale);
     }
 

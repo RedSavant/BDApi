@@ -14,6 +14,7 @@ public final class TransformHandle {
     private final Vector3f translation = new Vector3f(0f, 0f, 0f);
     private final Vector3f eulerRotation = new Vector3f(0f, 0f, 0f);
     private Anchor anchor = Anchor.CENTER;
+    private Vector3f customPivot;
 
     public TransformHandle(DisplayCrate crate) {
         this.crate = crate;
@@ -43,11 +44,20 @@ public final class TransformHandle {
 
     public TransformHandle anchor(Anchor anchor) {
         this.anchor = anchor;
+        this.customPivot = null;
+        return this;
+    }
+
+    public TransformHandle pivot(float x, float y, float z) {
+        this.customPivot = new Vector3f(x, y, z);
         return this;
     }
 
     public void apply() {
         Quaternionf rotation = BlockDisplayBuilder.euleurToQuaternion(eulerRotation);
-        crate.handle().transformation(anchor.toTransformation(translation, rotation, scale));
+        Transformation transformation = customPivot != null
+                ? Anchor.transformation(customPivot, translation, rotation, scale)
+                : anchor.toTransformation(translation, rotation, scale);
+        crate.handle().transformation(transformation);
     }
 }
