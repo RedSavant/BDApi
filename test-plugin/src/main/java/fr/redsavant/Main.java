@@ -49,20 +49,21 @@ public final class Main extends JavaPlugin {
             case "packet" -> testPacket(player);
             case "packetprivate" -> testPacketPrivate(player);
             case "offset" -> testOffset(player);
+            case "anchors" -> testAnchors(player);
             case "animation" -> testAnimation(player);
             case "timeline" -> testTimeline(player);
             case "group" -> testGroup(player);
             case "physics" -> testPhysics(player);
             case "effects" -> testEffects(player);
             case "clear" -> clearDisplays(player);
-            default -> player.sendMessage("Usage: /bdtest <all|display|paper|packet|packetprivate|offset|animation|timeline|group|physics|effects|clear>");
+            default -> player.sendMessage("Usage: /bdtest <all|display|paper|packet|packetprivate|offset|anchors|animation|timeline|group|physics|effects|clear>");
         }
         return true;
     }
 
     private static final List<String> SUBCOMMANDS = List.of(
             "all", "display", "paper", "packet", "packetprivate",
-            "offset", "animation", "timeline", "group", "physics", "effects", "clear"
+            "offset", "anchors", "animation", "timeline", "group", "physics", "effects", "clear"
     );
 
     @Override
@@ -126,6 +127,15 @@ public final class Main extends JavaPlugin {
         track(displays().create().at(base.clone().add(4, 0, 0)).block(Material.STONE).scale(2f).rotate(0, 45, 0).spawn());
         track(displays().create().anchor(Anchor.CORNER).at(base.clone().add(6, 0, 0)).block(Material.STONE).scale(2f).spawn());
         player.sendMessage("Offset row: centered scale 1, centered scale 2, centered rotated, corner scale 2.");
+    }
+
+    private void testAnchors(Player player) {
+        Location base = relative(player, -3, 1, 6).getBlock().getLocation();
+        track(displays().create().anchor(Anchor.CENTER).at(base).block(Material.STONE).scale(2f).rotate(0, 45, 0).spawn());
+        track(displays().create().anchor(Anchor.CORNER).at(base.clone().add(3, 0, 0)).block(Material.STONE).scale(2f).rotate(0, 45, 0).spawn());
+        track(displays().create().anchor(Anchor.BOTTOM_CENTER).at(base.clone().add(6, 0, 0)).block(Material.STONE).scale(2f).rotate(0, 45, 0).spawn());
+        track(displays().create().pivot(0f, 1f, 0f).at(base.clone().add(9, 0, 0)).block(Material.STONE).scale(2f).rotate(0, 45, 0).spawn());
+        player.sendMessage("Anchor row: CENTER, CORNER, BOTTOM_CENTER, custom pivot (top face) - all scaled and rotated.");
     }
 
     private void runAll(Player player) {
