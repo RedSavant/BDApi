@@ -154,7 +154,24 @@ BDApi computes the logical movement; the backend decides how the new state reach
 
 `.at(location)` sets the display position. By default displays use the `CENTER` anchor: scaling and rotation pivot around the block's center, so a scaled or rotated display stays centered on the same point instead of drifting toward the block corner. For `scale 1` with no rotation this is identical to placing a normal block at the location.
 
-Use `.anchor(Anchor.CORNER)` to keep the raw Minecraft behavior where scaling and rotation pivot around the block's minimum corner.
+The available anchors are:
+
+- `Anchor.CENTER` (default) — pivots around the block's center.
+- `Anchor.CORNER` — raw Minecraft behavior, pivots around the block's minimum corner.
+- `Anchor.BOTTOM_CENTER` — pivots around the middle of the bottom face, so the block grows upward and stays on the ground when scaled.
+
+For full control, `.pivot(x, y, z)` sets a custom pivot point in block-model space (each axis `0..1`) around which scaling and rotation are applied:
+
+```java
+BDApi.get().displays().create()
+        .at(location)
+        .block(Material.STONE)
+        .pivot(0.5f, 0f, 0.5f)
+        .scale(2f)
+        .spawn();
+```
+
+`.anchor(...)` and `.pivot(...)` are also available on `crate.transform()`.
 
 Both backends share the same coordinate and transform logic, so the same `.at(location)` and transformation produce the same visual result.
 
