@@ -2,7 +2,6 @@ package fr.redsavant.bdapi.display;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.util.Transformation;
 
 import java.util.Set;
 import java.util.UUID;
@@ -17,11 +16,14 @@ public interface DisplayHandle {
 
     Location location();
 
-    Transformation transformation();
+    /**
+     * @return the current logical transform, anchor compensation not yet applied
+     */
+    Transform transform();
 
     void teleport(Location location);
 
-    void transformation(Transformation transformation);
+    void transform(Transform transform);
 
     void block(Material material);
 
@@ -36,6 +38,15 @@ public interface DisplayHandle {
     void show(UUID viewer);
 
     void hide(UUID viewer);
+
+    /**
+     * Re-sends the display to a viewer that is already tracked, without touching the viewer set.
+     * Required after a client side event that drops the entities of a dimension, such as a world
+     * change or a respawn.
+     *
+     * @param viewer the viewer to re-send the display to
+     */
+    void resend(UUID viewer);
 
     boolean isVisibleTo(UUID viewer);
 }

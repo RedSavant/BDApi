@@ -3,7 +3,6 @@ package fr.redsavant.bdapi.display;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.BlockDisplay;
-import org.bukkit.util.Transformation;
 
 import java.util.Collections;
 import java.util.Set;
@@ -12,13 +11,23 @@ import java.util.UUID;
 public final class PaperDisplayHandle implements DisplayHandle {
 
     private final BlockDisplay entity;
+    private final Anchor anchor;
+
+    public PaperDisplayHandle(BlockDisplay entity, Anchor anchor) {
+        this.entity = entity;
+        this.anchor = anchor == null ? Anchor.CENTER : anchor;
+    }
 
     public PaperDisplayHandle(BlockDisplay entity) {
-        this.entity = entity;
+        this(entity, Anchor.CENTER);
     }
 
     public BlockDisplay entity() {
         return entity;
+    }
+
+    public Anchor anchor() {
+        return anchor;
     }
 
     @Override
@@ -42,8 +51,8 @@ public final class PaperDisplayHandle implements DisplayHandle {
     }
 
     @Override
-    public Transformation transformation() {
-        return entity.getTransformation();
+    public Transform transform() {
+        return Transform.from(entity.getTransformation(), anchor);
     }
 
     @Override
@@ -52,8 +61,8 @@ public final class PaperDisplayHandle implements DisplayHandle {
     }
 
     @Override
-    public void transformation(Transformation transformation) {
-        entity.setTransformation(transformation);
+    public void transform(Transform transform) {
+        entity.setTransformation(transform.toTransformation());
     }
 
     @Override
@@ -89,6 +98,13 @@ public final class PaperDisplayHandle implements DisplayHandle {
 
     @Override
     public void hide(UUID viewer) {
+    }
+
+    /**
+     * Paper displays are real world entities, the client follows the dimension changes on its own.
+     */
+    @Override
+    public void resend(UUID viewer) {
     }
 
     @Override

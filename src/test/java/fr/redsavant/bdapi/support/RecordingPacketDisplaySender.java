@@ -2,9 +2,12 @@ package fr.redsavant.bdapi.support;
 
 import fr.redsavant.bdapi.display.PacketDisplayHandle;
 import fr.redsavant.bdapi.packet.PacketDisplaySender;
+import org.bukkit.Material;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public final class RecordingPacketDisplaySender implements PacketDisplaySender {
@@ -17,6 +20,7 @@ public final class RecordingPacketDisplaySender implements PacketDisplaySender {
     }
 
     public final List<Call> calls = new ArrayList<>();
+    private final Map<Material, Integer> blockStateIds = new HashMap<>();
 
     @Override
     public void spawn(UUID viewer, PacketDisplayHandle display) {
@@ -36,6 +40,11 @@ public final class RecordingPacketDisplaySender implements PacketDisplaySender {
     @Override
     public void destroy(UUID viewer, PacketDisplayHandle display) {
         calls.add(new Call(Type.DESTROY, viewer, display.entityId()));
+    }
+
+    @Override
+    public int blockStateId(Material material) {
+        return blockStateIds.computeIfAbsent(material, Material::ordinal);
     }
 
     public long count(Type type) {

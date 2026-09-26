@@ -1,11 +1,11 @@
 package fr.redsavant.bdapi.internal;
 
 import fr.redsavant.bdapi.display.DisplayHandle;
+import fr.redsavant.bdapi.display.Transform;
 import org.bukkit.Location;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
-import org.bukkit.util.Transformation;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
@@ -93,13 +93,16 @@ public final class Animator {
     }
 
     private void applyTransform(ActiveAnimation anim, double t) {
-        Transformation from = anim.startTransform;
-        Transformation to = anim.endTransform;
+        Transform from = anim.startTransform;
+        Transform to = anim.endTransform;
 
-        Vector3f translation = MathUtils.lerp(from.getTranslation(), to.getTranslation(), t, new Vector3f());
-        Vector3f scale = MathUtils.lerp(from.getScale(), to.getScale(), t, new Vector3f());
-        Quaternionf leftRotation = MathUtils.slerp(new Quaternionf(from.getLeftRotation()), new Quaternionf(to.getLeftRotation()), t, new Quaternionf());
+        Vector3f translation = MathUtils.lerp(from.translation(), to.translation(), t, new Vector3f());
+        Vector3f scale = MathUtils.lerp(from.scale(), to.scale(), t, new Vector3f());
+        Quaternionf leftRotation = MathUtils.slerp(from.leftRotation(), to.leftRotation(), t, new Quaternionf());
 
-        anim.handle.transformation(new Transformation(translation, leftRotation, scale, new Quaternionf()));
+        // Compensating each interpolated frame is what keeps the visual centre pinned: the
+        // compensation depends on the scale and the rotation, so it cannot be baked into the
+        // endpoint of the animation.
+        anim.handle.transform(Transform.of(translation, leftRotation, scale, from.anchor()));
     }
 }

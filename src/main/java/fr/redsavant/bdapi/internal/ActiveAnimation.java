@@ -2,8 +2,8 @@ package fr.redsavant.bdapi.internal;
 
 import fr.redsavant.bdapi.animation.Easing;
 import fr.redsavant.bdapi.display.DisplayHandle;
+import fr.redsavant.bdapi.display.Transform;
 import org.bukkit.Location;
-import org.bukkit.util.Transformation;
 
 import java.util.UUID;
 
@@ -16,8 +16,8 @@ public final class ActiveAnimation {
     public final Location endLocation;
     public final boolean animateLocation;
 
-    public final Transformation startTransform;
-    public final Transformation endTransform;
+    public final Transform startTransform;
+    public final Transform endTransform;
     public final boolean animateTransform;
 
     public final long startTimeMillis;
@@ -28,7 +28,7 @@ public final class ActiveAnimation {
     public boolean finished = false;
 
     public ActiveAnimation(UUID entityId, DisplayHandle handle, Location startLocation, Location endLocation, boolean animateLocation,
-                           Transformation startTransform, Transformation endTransform, boolean animateTransform,
+                           Transform startTransform, Transform endTransform, boolean animateTransform,
                            long durationMillis, Easing easing, Runnable onComplete) {
         this.entityId = entityId;
         this.handle = handle;
