@@ -5,6 +5,8 @@ build/
 !**/src/test/**/build/
 .kotlin
 run/
+.idea/
+!.idea/icon.svg
 
 ### IntelliJ IDEA ###
 .idea/modules.xml

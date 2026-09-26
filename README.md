@@ -1,5 +1,8 @@
 <div align="center">
     <img src="https://cdn.rscomeback.fr/bdapi/mark.svg" width="150px" height="150px" />
+
+<a href="https://redsavant.github.io/BDApi/">Documentation</a> |
+<a href="https://discord.com/users/1341467930436833333/">Discord</a>
 </div>
 
 # BDApi
