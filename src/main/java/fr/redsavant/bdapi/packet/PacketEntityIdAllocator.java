@@ -18,7 +18,29 @@ public final class PacketEntityIdAllocator {
         this.counter = new AtomicInteger(base);
     }
 
+    /**
+     * Allocates the next entity id.
+     *
+     * <p>Ids are handed out in increasing order and never recycled: a reused id would make the
+     * client apply the updates and the destroy packets of a new display to an older one that is
+     * still tracked.
+     *
+     * @return a fresh entity id
+     * @throws IllegalStateException if the range is exhausted
+     */
     public int next() {
-        return counter.updateAndGet(current -> current == Integer.MAX_VALUE ? base + 1 : current + 1);
+        return counter.updateAndGet(current -> {
+            if (current == Integer.MAX_VALUE) {
+                throw new IllegalStateException("Packet entity id range starting at " + base + " is exhausted");
+            }
+            return current + 1;
+        });
+    }
+
+    /**
+     * @return how many ids can still be allocated
+     */
+    public int remaining() {
+        return Integer.MAX_VALUE - base - counter.get();
     }
 }

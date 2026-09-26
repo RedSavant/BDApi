@@ -2,7 +2,6 @@ package fr.redsavant.bdapi.display;
 
 import org.bukkit.Location;
 import org.bukkit.entity.BlockDisplay;
-import org.bukkit.util.Transformation;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
@@ -35,14 +34,14 @@ class PaperDisplayHandleTest {
     @Test
     void delegatesTransformationAndTeleport() {
         BlockDisplay entity = mock(BlockDisplay.class);
-        Transformation tf = new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(1, 1, 1), new Quaternionf());
+        Transform transform = Transform.of(new Vector3f(1, 2, 3), new Quaternionf(), new Vector3f(1, 1, 1), Anchor.CENTER);
         Location loc = new Location(null, 4, 5, 6);
 
         PaperDisplayHandle handle = new PaperDisplayHandle(entity);
-        handle.transformation(tf);
+        handle.transform(transform);
         handle.teleport(loc);
 
-        verify(entity).setTransformation(tf);
+        verify(entity).setTransformation(transform.toTransformation());
         verify(entity).teleport(loc);
     }
 

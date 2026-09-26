@@ -65,7 +65,16 @@ BDApi exposes two backends through the `DisplayBackend` enum:
 - `PAPER` — a real server-side Bukkit/Paper `BlockDisplay`. Visible to every eligible player, persists as a world entity, and does not require PacketEvents.
 - `PACKET_EVENTS` — a client-side fake `BlockDisplay`. No Bukkit entity exists on the server; the display is sent to specific players as packets. Requires PacketEvents to be installed and initialized.
 
-If the `PACKET_EVENTS` backend is requested while PacketEvents is unavailable, spawning throws an `IllegalStateException` with a clear message. Paper usage never touches PacketEvents classes.
+Both backends read the same builder options, so picking a backend never changes what a call means.
+
+The PacketEvents sender is resolved the first time a `PACKET_EVENTS` display is spawned, not when `BDApi.init` runs. PacketEvents may still be loading at that point, and a cached miss would disable the backend for the rest of the server lifetime. Declaring the load order is still recommended:
+
+```yaml
+softdepend:
+  - packetevents
+```
+
+If the backend is requested while PacketEvents is unavailable, spawning throws an `IllegalStateException` with a clear message. Paper usage never touches PacketEvents classes.
 
 ## Usage
 
@@ -113,6 +122,25 @@ BDApi.get().displays().create()
 
 Global displays are sent to eligible online players and to players who join later, and viewer state is cleared when players disconnect.
 
+A packet display only reaches the players of its own world: no packet of the display family carries a dimension, so a player standing elsewhere would render it at the same coordinates in their own world. Displays are re-sent when a viewer changes world or respawns, because the client drops the entities of a dimension it reloads.
+
+## Display options
+
+The visual options are applied by both backends:
+
+```java
+BDApi.get().displays().create()
+        .billboard(Display.Billboard.CENTER)
+        .brightness(15, 0)
+        .viewRange(0.5f)
+        .shadow(1.5f, 0.5f)
+        .at(location)
+        .block(Material.DIAMOND_BLOCK)
+        .spawn();
+```
+
+Leaving an option out keeps the vanilla default, so `brightness`, `viewRange` and `shadow` are only sent when you set them.
+
 ## Visibility
 
 ```java
@@ -156,6 +184,8 @@ BDApi computes the logical movement; the backend decides how the new state reach
 
 Use `.anchor(Anchor.CORNER)` to keep the raw Minecraft behavior where scaling and rotation pivot around the block's minimum corner.
 
+The anchor is carried by the display, not baked into the values it stores: animations interpolate the requested values and recompute the compensation on every frame, so the visual centre stays pinned from the first frame to the last. `crate.transform()` starts from the live transform too, which means changing only the scale leaves the translation, the rotation and the anchor untouched.
+
 Both backends share the same coordinate and transform logic, so the same `.at(location)` and transformation produce the same visual result.
 
 Timelines, display groups, transformations, meteor effects and explosion effects are also available.
@@ -165,6 +195,7 @@ Timelines, display groups, transformations, meteor effects and explosion effects
 - The `PACKET_EVENTS` backend requires PacketEvents installed and initialized on the server.
 - Client-side displays are not real entities: they do not collide, are not saved to the world, and are only visible to their viewers.
 - Per-player visibility applies to the `PACKET_EVENTS` backend only.
+- Moving a `PACKET_EVENTS` display to another world destroys and re-spawns it for each viewer instead of teleporting it, since a teleport packet cannot change the dimension.
 
 ## Status
 

@@ -11,6 +11,8 @@ import fr.redsavant.bdapi.packet.PacketDisplaySender;
 import fr.redsavant.bdapi.packet.PacketEntityIdAllocator;
 import org.bukkit.plugin.Plugin;
 
+import java.util.function.Supplier;
+
 public final class BDApi {
 
     private static BDApi instance;
@@ -22,7 +24,7 @@ public final class BDApi {
     private final Displays displays;
     private final Effects effects;
     private final DisplayBackend defaultBackend;
-    private final PacketDisplaySender packetSender;
+    private final PacketDisplayListener packetListener;
 
     private BDApi(Plugin plugin, BDApiConfig config) {
         this.plugin = plugin;
@@ -30,26 +32,24 @@ public final class BDApi {
         this.animator = new Animator(plugin);
         this.physicsEngine = new PhysicsEngine(plugin, registry);
         this.defaultBackend = config.defaultBackend();
-        this.packetSender = resolveSender(config);
         this.displays = new Displays(plugin, registry, animator, physicsEngine,
-                defaultBackend, packetSender, new PacketEntityIdAllocator());
+                defaultBackend, resolveSender(config), new PacketEntityIdAllocator());
         this.effects = new Effects(displays, plugin);
+        this.packetListener = new PacketDisplayListener(registry, plugin);
 
         this.animator.start();
         this.physicsEngine.start();
-        if (packetSender != null) {
-            plugin.getServer().getPluginManager().registerEvents(new PacketDisplayListener(registry), plugin);
+        if (PacketBackendSupport.present()) {
+            plugin.getServer().getPluginManager().registerEvents(packetListener, plugin);
         }
     }
 
-    private static PacketDisplaySender resolveSender(BDApiConfig config) {
+    private static Supplier<PacketDisplaySender> resolveSender(BDApiConfig config) {
         if (config.packetSender() != null) {
-            return config.packetSender();
+            PacketDisplaySender provided = config.packetSender();
+            return () -> provided;
         }
-        if (PacketBackendSupport.available()) {
-            return PacketBackendSupport.createSender();
-        }
-        return null;
+        return PacketBackendSupport::sender;
     }
 
     public static synchronized BDApi init(Plugin plugin) {
@@ -68,6 +68,10 @@ public final class BDApi {
         if (instance == null) return;
         instance.animator.stop();
         instance.physicsEngine.stop();
+        instance.packetListener.unregister();
+        // Client-side displays live in the packets that were already sent, so they have to be
+        // destroyed even when the server entities are deliberately kept.
+        instance.registry.removePacketDisplays();
         if (removeEntities) {
             instance.registry.removeAll();
         }

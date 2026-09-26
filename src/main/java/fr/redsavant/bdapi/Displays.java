@@ -10,6 +10,8 @@ import fr.redsavant.bdapi.packet.PacketDisplaySender;
 import fr.redsavant.bdapi.packet.PacketEntityIdAllocator;
 import org.bukkit.plugin.Plugin;
 
+import java.util.function.Supplier;
+
 public final class Displays {
 
     private final Plugin plugin;
@@ -17,11 +19,11 @@ public final class Displays {
     private final Animator animator;
     private final PhysicsEngine physicsEngine;
     private final DisplayBackend defaultBackend;
-    private final PacketDisplaySender packetSender;
+    private final Supplier<PacketDisplaySender> packetSender;
     private final PacketEntityIdAllocator entityIdAllocator;
 
     public Displays(Plugin plugin, DisplayRegistry registry, Animator animator, PhysicsEngine physicsEngine,
-                    DisplayBackend defaultBackend, PacketDisplaySender packetSender,
+                    DisplayBackend defaultBackend, Supplier<PacketDisplaySender> packetSender,
                     PacketEntityIdAllocator entityIdAllocator) {
         this.plugin = plugin;
         this.registry = registry;
@@ -56,8 +58,13 @@ public final class Displays {
         return defaultBackend;
     }
 
+    /**
+     * Resolved on every call: PacketEvents may still be loading when BDApi is initialized.
+     *
+     * @return the sender, or {@code null} while PacketEvents is not ready
+     */
     public PacketDisplaySender packetSender() {
-        return packetSender;
+        return packetSender.get();
     }
 
     public PacketEntityIdAllocator entityIdAllocator() {

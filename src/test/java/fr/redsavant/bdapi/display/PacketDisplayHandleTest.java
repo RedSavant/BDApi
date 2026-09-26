@@ -4,7 +4,7 @@ import fr.redsavant.bdapi.support.RecordingPacketDisplaySender;
 import fr.redsavant.bdapi.support.RecordingPacketDisplaySender.Type;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.util.Transformation;
+import org.bukkit.World;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 class PacketDisplayHandleTest {
 
@@ -29,9 +30,17 @@ class PacketDisplayHandleTest {
     }
 
     private PacketDisplayHandle handle(boolean global) {
-        Transformation tf = Anchor.CENTER.toTransformation(new Vector3f(), new Quaternionf(), new Vector3f(1, 1, 1));
+        return handleAt(global, new Location(null, 1, 2, 3));
+    }
+
+    private PacketDisplayHandle handleAt(Location location) {
+        return handleAt(true, location);
+    }
+
+    private PacketDisplayHandle handleAt(boolean global, Location location) {
+        Transform transform = Transform.of(new Vector3f(), new Quaternionf(), new Vector3f(1, 1, 1), Anchor.CENTER);
         return new PacketDisplayHandle(UUID.randomUUID(), 7, sender, global,
-                new Location(null, 1, 2, 3), tf, Material.STONE);
+                location, transform, Material.STONE, DisplaySettings.defaults());
     }
 
     @Test
@@ -83,7 +92,7 @@ class PacketDisplayHandleTest {
         PacketDisplayHandle h = handle(false);
         h.show(viewerA);
         long before = sender.countFor(Type.METADATA, viewerA);
-        h.transformation(Anchor.CENTER.toTransformation(new Vector3f(), new Quaternionf(), new Vector3f(2, 2, 2)));
+        h.transform(Transform.of(new Vector3f(), new Quaternionf(), new Vector3f(2, 2, 2), Anchor.CENTER));
         assertEquals(before + 1, sender.countFor(Type.METADATA, viewerA));
         assertEquals(0, sender.countFor(Type.METADATA, viewerB));
     }
@@ -93,7 +102,7 @@ class PacketDisplayHandleTest {
         PacketDisplayHandle h = handle(false);
         h.show(viewerA);
         long before = sender.count(Type.METADATA);
-        h.transformation(h.transformation());
+        h.transform(h.transform());
         assertEquals(before, sender.count(Type.METADATA));
     }
 
@@ -117,5 +126,69 @@ class PacketDisplayHandleTest {
         assertFalse(b.global());
         assertNotEquals(a.uniqueId(), b.uniqueId());
         assertEquals(DisplayBackend.PACKET_EVENTS, a.backend());
+    }
+
+    @Test
+    void sameWorldTeleportKeepsTheEntity() {
+        World world = mock(World.class);
+        PacketDisplayHandle h = handleAt(new Location(world, 1, 2, 3));
+        h.show(viewerA);
+
+        h.teleport(new Location(world, 5, 6, 7));
+
+        assertEquals(1, sender.countFor(Type.TELEPORT, viewerA));
+        assertEquals(1, sender.countFor(Type.SPAWN, viewerA));
+    }
+
+    @Test
+    void crossWorldTeleportRespawnsTheEntity() {
+        World origin = mock(World.class);
+        World target = mock(World.class);
+        PacketDisplayHandle h = handleAt(new Location(origin, 1, 2, 3));
+        h.show(viewerA);
+
+        h.teleport(new Location(target, 1, 2, 3));
+
+        // An entity teleport carries no dimension, so the fake entity has to be packed again.
+        assertEquals(0, sender.countFor(Type.TELEPORT, viewerA));
+        assertEquals(2, sender.countFor(Type.SPAWN, viewerA));
+        assertEquals(1, sender.countFor(Type.DESTROY, viewerA));
+        assertEquals(1, h.viewers().size());
+    }
+
+    @Test
+    void resendRepacksWithoutTouchingTheViewerSet() {
+        PacketDisplayHandle h = handle(false);
+        h.show(viewerA);
+
+        h.resend(viewerA);
+
+        assertEquals(2, sender.countFor(Type.SPAWN, viewerA));
+        assertEquals(1, sender.countFor(Type.DESTROY, viewerA));
+        assertEquals(2, sender.countFor(Type.METADATA, viewerA));
+        assertEquals(1, h.viewers().size());
+    }
+
+    @Test
+    void resendOfAnUntrackedViewerIsIgnored() {
+        PacketDisplayHandle h = handle(false);
+
+        h.resend(viewerA);
+
+        assertEquals(0, sender.count(Type.SPAWN));
+        assertTrue(h.viewers().isEmpty());
+    }
+
+    @Test
+    void blockStateIdIsResolvedOncePerMaterial() {
+        PacketDisplayHandle h = handle(false);
+
+        int first = h.blockStateId();
+        h.transform(Transform.of(new Vector3f(), new Quaternionf(), new Vector3f(2, 2, 2), Anchor.CENTER));
+
+        assertEquals(first, h.blockStateId());
+        assertNotEquals(first, new PacketDisplayHandle(UUID.randomUUID(), 8, sender, false,
+                new Location(null, 1, 2, 3), Transform.of(new Vector3f(), new Quaternionf(), new Vector3f(1, 1, 1), Anchor.CENTER),
+                Material.DIRT, DisplaySettings.defaults()).blockStateId());
     }
 }

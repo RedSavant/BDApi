@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PacketEntityIdAllocatorTest {
@@ -28,9 +29,25 @@ class PacketEntityIdAllocatorTest {
     }
 
     @Test
-    void wrapsToStayPositiveAtMaxValue() {
+    void failsInsteadOfHandingOutADuplicateWhenExhausted() {
         PacketEntityIdAllocator allocator = new PacketEntityIdAllocator(Integer.MAX_VALUE - 1);
+
         assertEquals(Integer.MAX_VALUE, allocator.next());
-        assertEquals(Integer.MAX_VALUE, allocator.next());
+
+        // Recycling the id would make the client apply the packets of a new display to the
+        // previous one, so the allocator gives up instead.
+        assertThrows(IllegalStateException.class, allocator::next);
+        assertThrows(IllegalStateException.class, allocator::next);
+    }
+
+    @Test
+    void defaultBaseLeavesTheServerEntityIdRangeAlone() {
+        PacketEntityIdAllocator allocator = new PacketEntityIdAllocator();
+        int before = allocator.remaining();
+
+        int id = allocator.next();
+
+        assertTrue(id >= 1_000_000_000);
+        assertEquals(before - 1, allocator.remaining());
     }
 }

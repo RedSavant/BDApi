@@ -3,6 +3,7 @@ package fr.redsavant.bdapi.display;
 import fr.redsavant.bdapi.packet.PacketDisplaySender;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.util.Transformation;
 
 import java.util.Collections;
@@ -19,23 +20,44 @@ public final class PacketDisplayHandle implements DisplayHandle {
     private final Set<UUID> viewers = new LinkedHashSet<>();
 
     private Location location;
-    private Transformation transformation;
+    private Transform transform;
+    private DisplaySettings settings;
     private Material material;
+    private Integer blockStateId;
     private boolean removed;
 
     public PacketDisplayHandle(UUID uuid, int entityId, PacketDisplaySender sender, boolean global,
-                               Location location, Transformation transformation, Material material) {
+                               Location location, Transform transform, Material material,
+                               DisplaySettings settings) {
         this.uuid = uuid;
         this.entityId = entityId;
         this.sender = sender;
         this.global = global;
         this.location = location.clone();
-        this.transformation = transformation;
+        this.transform = transform;
         this.material = material;
+        this.settings = settings == null ? DisplaySettings.defaults() : settings;
     }
 
     public Material material() {
         return material;
+    }
+
+    public DisplaySettings settings() {
+        return settings;
+    }
+
+    /**
+     * @return the block state id sent to the clients, resolved once per material change
+     */
+    public int blockStateId() {
+        Integer cached = blockStateId;
+        if (cached != null) {
+            return cached;
+        }
+        cached = sender.blockStateId(material);
+        blockStateId = cached;
+        return cached;
     }
 
     @Override
@@ -59,8 +81,12 @@ public final class PacketDisplayHandle implements DisplayHandle {
     }
 
     @Override
+    public Transform transform() {
+        return transform;
+    }
+
     public Transformation transformation() {
-        return transformation;
+        return transform.toTransformation();
     }
 
     @Override
@@ -68,18 +94,27 @@ public final class PacketDisplayHandle implements DisplayHandle {
         if (removed || target.equals(location)) {
             return;
         }
+        World previous = location.getWorld();
+        World next = target.getWorld();
         this.location = target.clone();
-        for (UUID viewer : viewers) {
-            sender.teleport(viewer, this);
+
+        if (sameWorld(previous, next)) {
+            for (UUID viewer : viewers) {
+                sender.teleport(viewer, this);
+            }
+            return;
         }
+        // An entity teleport packet carries coordinates but no dimension: the client would keep the
+        // fake entity in its previous world, so it has to be destroyed and spawned again.
+        respawnForViewers();
     }
 
     @Override
-    public void transformation(Transformation target) {
-        if (removed || target.equals(transformation)) {
+    public void transform(Transform target) {
+        if (removed || target.equals(transform)) {
             return;
         }
-        this.transformation = target;
+        this.transform = target;
         for (UUID viewer : viewers) {
             sender.metadata(viewer, this);
         }
@@ -91,6 +126,7 @@ public final class PacketDisplayHandle implements DisplayHandle {
             return;
         }
         this.material = target;
+        this.blockStateId = null;
         for (UUID viewer : viewers) {
             sender.metadata(viewer, this);
         }
@@ -141,7 +177,29 @@ public final class PacketDisplayHandle implements DisplayHandle {
     }
 
     @Override
+    public void resend(UUID viewer) {
+        if (removed || !viewers.contains(viewer)) {
+            return;
+        }
+        sender.destroy(viewer, this);
+        sender.spawn(viewer, this);
+        sender.metadata(viewer, this);
+    }
+
+    @Override
     public boolean isVisibleTo(UUID viewer) {
         return viewers.contains(viewer);
+    }
+
+    private void respawnForViewers() {
+        for (UUID viewer : viewers) {
+            sender.destroy(viewer, this);
+            sender.spawn(viewer, this);
+            sender.metadata(viewer, this);
+        }
+    }
+
+    private static boolean sameWorld(World first, World second) {
+        return first == null || second == null || first.equals(second);
     }
 }
