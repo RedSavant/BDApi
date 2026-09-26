@@ -2,11 +2,10 @@ package fr.redsavant.bdapi.animation;
 
 import fr.redsavant.bdapi.DisplayCrate;
 import fr.redsavant.bdapi.builder.BlockDisplayBuilder;
+import fr.redsavant.bdapi.display.Transform;
 import fr.redsavant.bdapi.internal.ActiveAnimation;
 import fr.redsavant.bdapi.internal.Animator;
 import org.bukkit.Location;
-import org.bukkit.util.Transformation;
-import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import java.util.concurrent.TimeUnit;
@@ -75,25 +74,31 @@ public final class AnimationBuilder {
 
     public void play() {
         boolean animateLocation = targetLocation != null;
+
+        // The interpolation runs on the logical transform, so the anchor compensation is applied
+        // once on each interpolated frame instead of being baked into the target values.
+        Transform current = crate.handle().transform();
         boolean animateTransform = targetScale != null || targetTranslation != null || targetEulerRotation != null;
 
         Location startLoc = crate.location().clone();
         Location endLoc = animateLocation ? targetLocation.clone() : startLoc;
 
-        Transformation current = crate.entity().getTransformation();
-        Vector3f endScale = targetScale != null ? targetScale : new Vector3f(current.getScale());
-        Vector3f endTranslation = targetTranslation != null ? targetTranslation : new Vector3f(current.getTranslation());
-        Quaternionf endRotation = targetEulerRotation != null
-                ? BlockDisplayBuilder.euleurToQuaternion(targetEulerRotation)
-                : new Quaternionf(current.getLeftRotation());
-
-        Transformation endTransform = new Transformation(endTranslation, endRotation, endScale, new Quaternionf());
+        Transform end = current;
+        if (targetScale != null) {
+            end = end.withScale(targetScale);
+        }
+        if (targetEulerRotation != null) {
+            end = end.withLeftRotation(BlockDisplayBuilder.euleurToQuaternion(targetEulerRotation));
+        }
+        if (targetTranslation != null) {
+            end = end.withTranslation(targetTranslation);
+        }
 
         ActiveAnimation animation = new ActiveAnimation(
-                crate.entity().getUniqueId(),
-                crate.entity(),
+                crate.handle().uniqueId(),
+                crate.handle(),
                 startLoc, endLoc, animateLocation,
-                current, endTransform, animateTransform,
+                current, end, animateTransform,
                 durationMillis, easing, onComplete
         );
 

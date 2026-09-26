@@ -2,17 +2,30 @@ package fr.redsavant.bdapi.builder;
 
 import fr.redsavant.bdapi.DisplayCrate;
 import fr.redsavant.bdapi.Displays;
+import fr.redsavant.bdapi.display.Anchor;
+import fr.redsavant.bdapi.display.DisplayBackend;
+import fr.redsavant.bdapi.display.DisplaySettings;
+import fr.redsavant.bdapi.display.PacketDisplayHandle;
+import fr.redsavant.bdapi.display.PaperDisplayHandle;
+import fr.redsavant.bdapi.display.Transform;
 import fr.redsavant.bdapi.internal.Animator;
 import fr.redsavant.bdapi.internal.DisplayRegistry;
 import fr.redsavant.bdapi.internal.PhysicsEngine;
+import fr.redsavant.bdapi.packet.PacketDisplaySender;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Display;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.util.Transformation;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
+
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.UUID;
 
 public final class BlockDisplayBuilder {
 
@@ -27,12 +40,11 @@ public final class BlockDisplayBuilder {
     private final Vector3f scale = new Vector3f(1f, 1f, 1f); // Default
     private final Vector3f translation = new Vector3f(0f, 0f, 0f); // Default
     private final Vector3f eulerRotation = new Vector3f(0f, 0f, 0f); // Default
-    private int brightnessBlock = -1; // Default
-    private int brightnessSky = -1; // Default
-    private Display.Billboard billboard = Display.Billboard.FIXED; // Default
-    private float viewRange = -1f; // Default
-    private float shadowRadius = -1f; // Default
-    private float shadowStrength = -1f; // Default
+    private DisplaySettings settings = DisplaySettings.defaults();
+    private DisplayBackend backend;
+    private Anchor anchor = Anchor.CENTER;
+    private boolean global = false;
+    private final Set<UUID> viewers = new LinkedHashSet<>();
 
     public BlockDisplayBuilder(Displays displays, Plugin plugin, DisplayRegistry registry, Animator animator,
                                PhysicsEngine physicsEngine) {
@@ -120,8 +132,7 @@ public final class BlockDisplayBuilder {
      * @return this
      */
     public BlockDisplayBuilder brightness(int blockLight, int skyLight) {
-        this.brightnessBlock = blockLight;
-        this.brightnessSky = skyLight;
+        this.settings = settings.withBrightness(blockLight, skyLight);
         return this;
     }
 
@@ -131,7 +142,7 @@ public final class BlockDisplayBuilder {
      * @return this
      */
     public BlockDisplayBuilder billboard(Display.Billboard billboard) {
-        this.billboard = billboard;
+        this.settings = settings.withBillboard(billboard);
         return this;
     }
 
@@ -141,7 +152,7 @@ public final class BlockDisplayBuilder {
      * @return this
      */
     public BlockDisplayBuilder viewRange(float viewRange) {
-        this.viewRange = viewRange;
+        this.settings = settings.withViewRange(viewRange);
         return this;
     }
 
@@ -152,22 +163,77 @@ public final class BlockDisplayBuilder {
      * @return
      */
     public BlockDisplayBuilder shadow(float radius, float strength) {
-        this.shadowRadius = radius;
-        this.shadowStrength = strength;
+        this.settings = settings.withShadow(radius, strength);
         return this;
     }
 
-    /**
-     * Build and spawn the block display
-     * @return crate
-     */
+    public BlockDisplayBuilder backend(DisplayBackend backend) {
+        this.backend = backend;
+        return this;
+    }
+
+    public BlockDisplayBuilder anchor(Anchor anchor) {
+        this.anchor = anchor;
+        return this;
+    }
+
+    public BlockDisplayBuilder viewer(Player player) {
+        this.viewers.add(player.getUniqueId());
+        return this;
+    }
+
+    public BlockDisplayBuilder viewers(Collection<? extends Player> players) {
+        for (Player player : players) {
+            this.viewers.add(player.getUniqueId());
+        }
+        return this;
+    }
+
+    public BlockDisplayBuilder global() {
+        this.global = true;
+        return this;
+    }
+
     public DisplayCrate spawn() {
         if (location == null) {
             throw new IllegalStateException("You need to call .at(location) before .spawn().");
         }
-        BlockDisplay entity = location.getWorld().spawn(location, BlockDisplay.class, this::configure);
-        DisplayCrate crate = new DisplayCrate(entity, plugin, registry, animator, physicsEngine);
+        DisplayBackend resolved = backend != null ? backend : displays.defaultBackend();
+        DisplayCrate crate = resolved == DisplayBackend.PACKET_EVENTS ? spawnPacket() : spawnPaper();
         registry.register(crate);
+        return crate;
+    }
+
+    private DisplayCrate spawnPaper() {
+        BlockDisplay entity = location.getWorld().spawn(location, BlockDisplay.class, this::configure);
+        return new DisplayCrate(new PaperDisplayHandle(entity, anchor), plugin, registry, animator, physicsEngine);
+    }
+
+    private DisplayCrate spawnPacket() {
+        PacketDisplaySender sender = displays.packetSender();
+        if (sender == null) {
+            throw new IllegalStateException(
+                    "PacketEvents backend requested but PacketEvents is not installed or initialized. "
+                    + "Add 'softdepend: [packetevents]' to your plugin.yml so PacketEvents loads first.");
+        }
+        PacketDisplayHandle handle = new PacketDisplayHandle(
+                UUID.randomUUID(), displays.entityIdAllocator().next(), sender, global,
+                location, buildTransform(), material, settings);
+        DisplayCrate crate = new DisplayCrate(handle, plugin, registry, animator, physicsEngine);
+        if (global) {
+            // Viewers of another world are filtered out by the sender: a spawn packet carries no
+            // dimension and they would render the display at the same coordinates in their world.
+            for (Player online : Bukkit.getOnlinePlayers()) {
+                handle.show(online.getUniqueId());
+            }
+        } else if (viewers.isEmpty()) {
+            plugin.getLogger().warning("PACKET_EVENTS display spawned with no viewers and without .global(); "
+                    + "it is visible to nobody until show()/addViewer() is called.");
+        } else {
+            for (UUID viewer : viewers) {
+                handle.show(viewer);
+            }
+        }
         return crate;
     }
 
@@ -185,34 +251,29 @@ public final class BlockDisplayBuilder {
      */
     private void configure(BlockDisplay entity) {
         entity.setBlock(material.createBlockData());
-        entity.setBillboard(billboard);
-        if (brightnessBlock >= 0 && brightnessSky >= 0) {
-            entity.setBrightness(new Display.Brightness(brightnessBlock, brightnessSky));
+        entity.setBillboard(settings.billboard());
+        if (settings.hasBrightness()) {
+            entity.setBrightness(new Display.Brightness(settings.brightnessBlock(), settings.brightnessSky()));
         }
-        if (viewRange >= 0) {
-            entity.setViewRange(viewRange);
+        if (settings.hasViewRange()) {
+            entity.setViewRange(settings.viewRange());
         }
-        if (shadowRadius >= 0) {
-            entity.setShadowRadius(shadowRadius);
+        if (settings.hasShadowRadius()) {
+            entity.setShadowRadius(settings.shadowRadius());
         }
-        if (shadowStrength >= 0) {
-            entity.setShadowStrength(shadowStrength);
+        if (settings.hasShadowStrength()) {
+            entity.setShadowStrength(settings.shadowStrength());
         }
-        entity.setTransformation(buildTransformation());
+        entity.setTransformation(buildTransform().toTransformation());
     }
 
     /**
      * Utility methode to build the transformation of a block display
-     * @return Transformation
+     * @return Transform
      */
-    private Transformation buildTransformation() {
+    private Transform buildTransform() {
         Quaternionf rotation = euleurToQuaternion(eulerRotation);
-        return new Transformation(
-                new Vector3f(translation),
-                rotation,
-                new Vector3f(scale),
-                new Quaternionf()
-        );
+        return Transform.of(translation, rotation, scale, anchor);
     }
 
     /**

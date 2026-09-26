@@ -2,10 +2,14 @@ name: BDApiTest
 version: '${version}'
 main: fr.redsavant.Main
 api-version: '1.21'
+# PacketEvents has to be loaded before Main.onEnable, otherwise BDApi.init runs without a
+# sender and the PACKET_EVENTS backend stays unavailable.
+softdepend:
+  - packetevents
 commands:
   bdtest:
     description: Runs the BDApi feature tests
-    usage: /bdtest <all|display|animation|timeline|group|physics|effects|clear>
+    usage: /bdtest <all|display|paper|packet|packetprivate|offset|animation|timeline|group|physics|effects|clear>
     permission: bdapi.test
 permissions:
   bdapi.test:
