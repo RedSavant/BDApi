@@ -21,11 +21,12 @@ repositories {
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
-    compileOnly("com.github.retrooper:packetevents-spigot:2.9.5")
+    compileOnly("com.github.retrooper:packetevents-spigot:2.14.0")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
     testImplementation("org.mockito:mockito-core:5.14.2")
     testImplementation("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+    testImplementation("com.github.retrooper:packetevents-spigot:2.14.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
