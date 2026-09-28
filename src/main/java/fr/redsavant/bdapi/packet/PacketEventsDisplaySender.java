@@ -1,6 +1,7 @@
 package fr.redsavant.bdapi.packet;
 
 import com.github.retrooper.packetevents.PacketEvents;
+import com.github.retrooper.packetevents.protocol.entity.type.EntityTypes;
 import com.github.retrooper.packetevents.util.Vector3d;
 import com.github.retrooper.packetevents.wrapper.PacketWrapper;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerDestroyEntities;
@@ -26,15 +27,13 @@ public final class PacketEventsDisplaySender implements PacketDisplaySender {
     @Override
     public void spawn(UUID viewer, PacketDisplayHandle display) {
         Location location = display.location();
+        com.github.retrooper.packetevents.protocol.world.Location peLocation =
+                new com.github.retrooper.packetevents.protocol.world.Location(
+                        location.getX(), location.getY(), location.getZ(),
+                        location.getYaw(), location.getPitch());
         send(viewer, display, new WrapperPlayServerSpawnEntity(
-                display.entityId(),
-                display.uniqueId(),
-                SpigotConversionUtil.fromBukkitEntityType(org.bukkit.entity.EntityType.BLOCK_DISPLAY),
-                SpigotConversionUtil.fromBukkitLocation(location),
-                location.getYaw(),
-                0,
-                Vector3d.zero()
-        ));
+                display.entityId(), display.uniqueId(), EntityTypes.BLOCK_DISPLAY,
+                peLocation, location.getYaw(), 0, new Vector3d()));
     }
 
     @Override

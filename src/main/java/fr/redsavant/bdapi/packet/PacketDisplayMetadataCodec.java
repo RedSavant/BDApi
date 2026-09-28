@@ -16,9 +16,10 @@ import java.util.List;
 /**
  * Encodes the vanilla display metadata of a client-side block display.
  *
- * <p>The display metadata indices used here are stable for the supported range
- * (Minecraft 1.21.11 through 26.3). PacketEvents owns the protocol serializer mapping,
- * so the same logical metadata can be sent across that range.
+ * <p>PacketEvents 2.9 exposes no dedicated {@code EntityDataTypes} entry for the display specific
+ * fields, so the standard byte/int/float types are reused with the indices of the vanilla display
+ * entity. {@code EntityDataTypes} only describes how a value is serialized, the index carried by
+ * {@link EntityData} selects the field, which is exactly how the vanilla entity is laid out.
  */
 final class PacketDisplayMetadataCodec {
 
@@ -64,7 +65,7 @@ final class PacketDisplayMetadataCodec {
     private static void encodeSettings(List<EntityData<?>> data, DisplaySettings settings) {
         data.add(new EntityData<>(BILLBOARD, EntityDataTypes.BYTE, billboardId(settings.billboard())));
         if (settings.hasBrightness()) {
-            data.add(new EntityData<>(BRIGHTNESS_OVERRIDE, EntityDataTypes.INT, packBrightness(settings)));
+            data.add(new EntityData<>(BRIGHTNESS_OVERRIDE, EntityDataTypes.BYTE, packBrightness(settings)));
         }
         if (settings.hasViewRange()) {
             data.add(new EntityData<>(VIEW_RANGE, EntityDataTypes.FLOAT, settings.viewRange()));
@@ -86,8 +87,7 @@ final class PacketDisplayMetadataCodec {
         };
     }
 
-    private static int packBrightness(DisplaySettings settings) {
-        // Vanilla packed light: block light in bits 4..7, sky light in bits 20..23.
-        return (settings.brightnessBlock() << 4) | (settings.brightnessSky() << 20);
+    private static byte packBrightness(DisplaySettings settings) {
+        return (byte) ((settings.brightnessBlock() << 4) | settings.brightnessSky());
     }
 }
