@@ -8,9 +8,21 @@ BDApi is a small Java library for creating and animating Minecraft block display
 
 ## Requirements
 
-- Paper 1.21.11
-- Java 21+
-- PacketEvents (optional, only required for the `PACKET_EVENTS` backend)
+- Paper **1.21.11 through 26.3**
+- Java **21+** on 1.21.11; use the Java version required by the target Paper release
+- PacketEvents **2.14.0+** (optional, only required for the `PACKET_EVENTS` backend)
+
+BDApi is compiled against the oldest supported Paper API (1.21.11) and Java 21 so the same library JAR can be used across the supported runtime range. PacketEvents handles the protocol-specific serialization for newer Minecraft versions.
+
+### Supported runtime matrix
+
+| Minecraft / Paper | Java runtime | PAPER backend | PACKET_EVENTS backend |
+|---|---:|:---:|:---:|
+| 1.21.11 | 21+ | ✅ | ✅ |
+| 26.1 / 26.1.x | Paper-required JVM | ✅ | ✅ |
+| 26.2 | Paper-required JVM | ✅ | ✅ |
+| 26.3 | Paper-required JVM | ✅ | ✅ |
+
 
 ## Installation
 
@@ -22,7 +34,7 @@ repositories {
 }
 
 dependencies {
-    implementation("fr.redsavant:bdapi:1.1.0-beta.1")
+    implementation("fr.redsavant:bdapi:1.1.0-beta.2")
 }
 ```
 
@@ -199,4 +211,4 @@ Timelines, display groups, transformations, meteor effects and explosion effects
 
 ## Status
 
-BDApi is currently available as `1.1.0-beta.1`. The API may change between versions.
+BDApi is currently available as `1.1.0-beta.2`. The API may change between versions.
